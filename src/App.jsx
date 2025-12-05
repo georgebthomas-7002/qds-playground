@@ -84,7 +84,6 @@ function App() {
 
   const handleEmailResults = () => {
     if (email && email.includes('@')) {
-      // Simulate sending email
       setEmailSent(true)
       setTimeout(() => {
         setShowEmailForm(false)
@@ -112,23 +111,22 @@ function App() {
           <div className="logo">
             <div className="logo-icon">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
               </svg>
             </div>
             <span>TCR ROI Calculator</span>
           </div>
-          <p className="subtitle">Calculate your potential savings with Teller Cash Recycler implementation</p>
+          <p className="subtitle">Evaluate the financial impact of Teller Cash Recycler implementation for your branch</p>
         </header>
 
         <main className="main-content">
           <div className="input-section">
-            <h2>Branch Information</h2>
+            <h2>Branch Details</h2>
 
             <div className="input-group">
               <label htmlFor="transactions">
-                Total Transactions Per Month
+                Monthly Transaction Volume
                 <span className="required">*</span>
               </label>
               <div className="input-wrapper">
@@ -137,16 +135,16 @@ function App() {
                   id="transactions"
                   value={transactions}
                   onChange={(e) => setTransactions(e.target.value)}
-                  placeholder="Enter monthly transactions"
+                  placeholder="e.g., 15000"
                   min="0"
                 />
-                <span className="input-hint">Average monthly transaction volume for branch</span>
+                <span className="input-hint">Total transactions processed per month at this branch</span>
               </div>
             </div>
 
             <div className="input-group">
               <label htmlFor="currentFTEs">
-                Current FTEs
+                Current Staff (FTEs)
                 <span className="required">*</span>
               </label>
               <div className="input-wrapper">
@@ -155,18 +153,18 @@ function App() {
                   id="currentFTEs"
                   value={currentFTEs}
                   onChange={(e) => setCurrentFTEs(e.target.value)}
-                  placeholder="Enter current FTE count"
+                  placeholder="e.g., 5"
                   min="0"
                   step="0.5"
                 />
-                <span className="input-hint">Full-time equivalent employees at branch</span>
+                <span className="input-hint">Full-time equivalent employees currently at branch</span>
               </div>
             </div>
 
             <div className="input-group">
               <label htmlFor="fteCost">
-                Total Cost Per FTE
-                <span className="optional">(Optional)</span>
+                Annual Cost Per FTE
+                <span className="optional">Optional</span>
               </label>
               <div className="input-wrapper has-prefix">
                 <span className="input-prefix">$</span>
@@ -178,7 +176,7 @@ function App() {
                   placeholder="42,000"
                   min="0"
                 />
-                <span className="input-hint">Salary + benefits total. Default: $42,000</span>
+                <span className="input-hint">Total compensation including salary and benefits. Defaults to $42,000 if not specified.</span>
               </div>
             </div>
 
@@ -187,54 +185,53 @@ function App() {
                 Calculate ROI
               </button>
               <button className="btn btn-secondary" onClick={handleReset}>
-                Reset
+                Clear
               </button>
             </div>
           </div>
 
           {results && (
             <div className="results-section">
-              <h2>Your Results</h2>
+              <h2>Analysis Results</h2>
 
               {results.noSavings ? (
                 <div className="no-savings-card">
                   <div className="no-savings-icon">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                      <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                       <circle cx="12" cy="16" r="1" fill="currentColor"/>
                     </svg>
                   </div>
-                  <h3>Limited Cost Savings Available</h3>
+                  <h3>Limited Direct Savings Identified</h3>
                   {results.atMinimum ? (
                     <p>
-                      Your branch is currently operating at or near the minimum of {MINIMUM_FTES} FTEs required for operations.
-                      While TCR implementation offers operational benefits, direct labor cost savings would be limited in this scenario.
+                      Your branch is currently operating at or near the minimum staffing requirement of {MINIMUM_FTES} FTEs.
+                      While TCR implementation provides significant operational efficiencies, direct labor cost reductions would be limited in this configuration.
                     </p>
                   ) : (
                     <p>
-                      Based on your transaction volume, the recommended staffing level would bring your branch
-                      below the minimum {MINIMUM_FTES} FTEs required for operations. TCR implementation may still
-                      offer operational efficiencies and improved customer service.
+                      Based on your current transaction volume, optimal staffing would fall below the minimum {MINIMUM_FTES} FTE requirement for branch operations.
+                      TCR implementation may still deliver value through improved efficiency and customer experience.
                     </p>
                   )}
                   <div className="info-box">
-                    <strong>Note:</strong> A minimum of {MINIMUM_FTES} FTEs is required for branch operations, with very few exceptions.
+                    <strong>Note:</strong> Branches require a minimum of {MINIMUM_FTES} FTEs for full operational capability, with limited exceptions.
                   </div>
                 </div>
               ) : (
                 <>
                   <div className="results-grid">
                     <div className="result-card">
-                      <div className="result-label">Recommended FTEs</div>
+                      <div className="result-label">Optimal Staffing</div>
                       <div className="result-value">{results.recommendedFTEs}</div>
-                      <div className="result-sublabel">Based on {formatNumber(results.inputData.transactions)} transactions/month</div>
+                      <div className="result-sublabel">FTEs for {formatNumber(results.inputData.transactions)} transactions/mo</div>
                     </div>
 
                     <div className="result-card">
-                      <div className="result-label">FTE Reduction</div>
+                      <div className="result-label">Staff Reduction</div>
                       <div className="result-value highlight">{results.fteSave}</div>
-                      <div className="result-sublabel">Full-time equivalents saved</div>
+                      <div className="result-sublabel">Full-time equivalent positions</div>
                     </div>
 
                     <div className="result-card">
@@ -244,30 +241,30 @@ function App() {
                     </div>
 
                     <div className="result-card featured">
-                      <div className="result-label">Estimated Annual TCR ROI</div>
+                      <div className="result-label">Estimated Annual ROI</div>
                       <div className="result-value large">{formatCurrency(results.estimatedROI)}</div>
-                      <div className="result-sublabel">After {formatCurrency(ANNUAL_TCR_COST)} annual TCR cost</div>
+                      <div className="result-sublabel">Net savings after {formatCurrency(ANNUAL_TCR_COST)} TCR cost</div>
                     </div>
                   </div>
 
                   <div className="calculation-breakdown">
-                    <h3>Calculation Breakdown</h3>
+                    <h3>Calculation Summary</h3>
                     <ul>
                       <li>
-                        <span>Transactions / Capacity per FTE:</span>
-                        <span>{formatNumber(results.inputData.transactions)} / {formatNumber(TRANSACTIONS_PER_FTE)} = {results.recommendedFTEs} recommended FTEs</span>
+                        <span>Transaction Capacity Analysis</span>
+                        <span>{formatNumber(results.inputData.transactions)} ÷ {formatNumber(TRANSACTIONS_PER_FTE)} = {results.recommendedFTEs} FTEs</span>
                       </li>
                       <li>
-                        <span>Current FTEs - Recommended:</span>
-                        <span>{results.inputData.currentFTEs} - {results.recommendedFTEs} = {results.fteSave} FTE reduction</span>
+                        <span>Staffing Optimization</span>
+                        <span>{results.inputData.currentFTEs} − {results.recommendedFTEs} = {results.fteSave} FTE reduction</span>
                       </li>
                       <li>
-                        <span>FTE Reduction x Cost per FTE:</span>
-                        <span>{results.fteSave} x {formatCurrency(results.inputData.fteCost)} = {formatCurrency(results.annualSavings)}</span>
+                        <span>Labor Cost Reduction</span>
+                        <span>{results.fteSave} × {formatCurrency(results.inputData.fteCost)} = {formatCurrency(results.annualSavings)}</span>
                       </li>
                       <li>
-                        <span>Annual Savings - TCR Cost:</span>
-                        <span>{formatCurrency(results.annualSavings)} - {formatCurrency(ANNUAL_TCR_COST)} = {formatCurrency(results.estimatedROI)}</span>
+                        <span>Net Annual Return</span>
+                        <span>{formatCurrency(results.annualSavings)} − {formatCurrency(ANNUAL_TCR_COST)} = {formatCurrency(results.estimatedROI)}</span>
                       </li>
                     </ul>
                   </div>
@@ -277,19 +274,18 @@ function App() {
               <div className="email-section">
                 {!showEmailForm ? (
                   <button className="btn btn-outline" onClick={() => setShowEmailForm(true)}>
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                      <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M22 6L12 13L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+                      <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M22 6L12 13L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                     </svg>
-                    Email My Results
+                    Email Results
                   </button>
                 ) : emailSent ? (
                   <div className="email-success">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
-                      <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1953 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M22 4L12 14.01L9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                      <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    Results sent to {email}!
+                    Results sent to {email}
                   </div>
                 ) : (
                   <div className="email-form">
@@ -297,10 +293,10 @@ function App() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email address"
+                      placeholder="Enter email address"
                     />
                     <button className="btn btn-primary" onClick={handleEmailResults}>
-                      Send Results
+                      Send
                     </button>
                     <button className="btn btn-text" onClick={() => setShowEmailForm(false)}>
                       Cancel
@@ -314,12 +310,12 @@ function App() {
 
         <footer className="footer">
           <div className="assumptions">
-            <h4>Calculation Assumptions</h4>
+            <h4>Model Assumptions</h4>
             <ul>
-              <li>Single FTE capacity: {formatNumber(TRANSACTIONS_PER_FTE)} transactions/month</li>
+              <li>FTE capacity: {formatNumber(TRANSACTIONS_PER_FTE)} transactions/month</li>
               <li>Default FTE cost: {formatCurrency(DEFAULT_FTE_COST)}/year</li>
               <li>Annual TCR cost: {formatCurrency(ANNUAL_TCR_COST)}</li>
-              <li>Minimum branch staffing: {MINIMUM_FTES} FTEs</li>
+              <li>Minimum staffing: {MINIMUM_FTES} FTEs</li>
             </ul>
           </div>
         </footer>
