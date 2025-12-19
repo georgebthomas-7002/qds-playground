@@ -131,8 +131,18 @@ export default function ResultsPage() {
       // API always returns PDF binary now (HubSpot attachment happens server-side)
       const blob = await response.blob();
 
-      // Verify we got a PDF
-      if (blob.type !== 'application/pdf' && blob.size === 0) {
+      // Verify we got a PDF (use OR - either wrong type OR zero size is an error)
+      if (blob.type !== 'application/pdf' || blob.size === 0) {
+        // Try to read the error message if it's JSON
+        if (blob.type === 'application/json') {
+          const errorText = await blob.text();
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.error || 'Failed to generate PDF');
+          } catch {
+            throw new Error('Failed to generate PDF');
+          }
+        }
         throw new Error('Invalid PDF response');
       }
 

@@ -10,6 +10,8 @@ const nextConfig = {
       },
     ],
   },
+  // Required for @react-pdf/renderer to work on Vercel serverless
+  serverExternalPackages: ['@react-pdf/renderer'],
 }
 
 module.exports = nextConfig
