@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { AnimatePresence } from 'framer-motion';
 import { useCalculator } from '@/hooks/useCalculator';
-import { StepIndicator } from '@/components/ui';
+import { StepIndicator, Footer } from '@/components/ui';
 import {
   InstitutionStep,
   BranchStep,
@@ -100,25 +100,7 @@ export default function CalculatorPage() {
         <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 bg-white py-6">
-        <div className="mx-auto max-w-4xl px-4">
-          <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-            <p className="text-xs text-gray-400">
-              Your information is secure and will never be shared.
-            </p>
-            <p className="text-xs text-gray-400">
-              Questions?{' '}
-              <a
-                href="mailto:info@qdsdata.com"
-                className="text-brand-teal hover:underline"
-              >
-                Contact QDS
-              </a>
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

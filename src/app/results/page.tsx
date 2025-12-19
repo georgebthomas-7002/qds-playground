@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useCalculator } from '@/hooks/useCalculator';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, Footer } from '@/components/ui';
 import {
   ROIChart,
   ProjectionChart,
@@ -14,6 +14,7 @@ import {
   NoSavingsCard,
   CalculationBreakdown,
   PainPointSolutions,
+  ContinueYourJourney,
 } from '@/components/results';
 import { formatCurrency, formatFTE, formatNumber } from '@/lib/calculations';
 import { trackEvent } from '@/lib/utils';
@@ -399,6 +400,9 @@ export default function ResultsPage() {
           </Card>
         )}
 
+        {/* Continue Your Journey - Learning Resources */}
+        <ContinueYourJourney />
+
         {/* Ready to Start a Conversation CTA */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -421,14 +425,7 @@ export default function ResultsPage() {
         </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 bg-white py-6">
-        <div className="mx-auto max-w-4xl px-4 text-center">
-          <p className="text-sm text-gray-500">
-            Quality Data Systems - Serving financial institutions for 40+ years
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

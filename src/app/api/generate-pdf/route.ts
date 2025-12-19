@@ -16,6 +16,7 @@ import {
   PAIN_POINTS,
   PAIN_POINT_SOLUTIONS,
   QDS_CONTACT_URL,
+  QDS_RESOURCES,
 } from '@/lib/constants';
 
 // QDS Brand Colors
@@ -265,6 +266,45 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: colors.black,
   },
+  // Resources section
+  resourcesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+  },
+  resourceCard: {
+    width: '48%',
+    marginBottom: 8,
+    marginRight: '2%',
+    padding: 10,
+    backgroundColor: colors.lightGray,
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.lime,
+  },
+  resourceType: {
+    fontSize: 6,
+    color: colors.teal,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 3,
+  },
+  resourceTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: colors.navy,
+    marginBottom: 4,
+  },
+  resourceDesc: {
+    fontSize: 7,
+    color: colors.gray,
+    marginBottom: 4,
+    lineHeight: 1.3,
+  },
+  resourceUrl: {
+    fontSize: 6,
+    color: colors.teal,
+  },
 });
 
 // Types for the API
@@ -308,8 +348,37 @@ interface PDFRequestBody {
 
 // PDF Document Component
 function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['results']; contactInfo: PDFRequestBody['contactInfo'] }) {
-  const { branchData, calculation, timestamp } = results;
-  const date = new Date(timestamp).toLocaleDateString('en-US', {
+  // Ensure branchData has defaults
+  const branchData = {
+    institutionName: results?.branchData?.institutionName || 'Unknown Institution',
+    branchName: results?.branchData?.branchName || 'Unknown Branch',
+    monthlyTransactions: results?.branchData?.monthlyTransactions ?? 0,
+    currentFTEs: results?.branchData?.currentFTEs ?? 0,
+    annualFTECost: results?.branchData?.annualFTECost ?? 42000,
+    painPoints: results?.branchData?.painPoints || [],
+  };
+
+  // Ensure calculation has defaults
+  const calculation = {
+    recommendedFTEs: results?.calculation?.recommendedFTEs ?? 0,
+    fteSavings: results?.calculation?.fteSavings ?? 0,
+    annualLaborSavings: results?.calculation?.annualLaborSavings ?? 0,
+    annualTCRCost: results?.calculation?.annualTCRCost ?? ANNUAL_TCR_COST,
+    netAnnualROI: results?.calculation?.netAnnualROI ?? 0,
+    monthlyROI: results?.calculation?.monthlyROI ?? 0,
+    paybackPeriodMonths: results?.calculation?.paybackPeriodMonths ?? 0,
+    fiveYearROI: results?.calculation?.fiveYearROI ?? 0,
+    roiPercentage: results?.calculation?.roiPercentage ?? 0,
+    firstYearNetSavings: results?.calculation?.firstYearNetSavings ?? 0,
+    totalFiveYearInvestment: results?.calculation?.totalFiveYearInvestment ?? 0,
+    efficiencyGainPercent: results?.calculation?.efficiencyGainPercent ?? 0,
+    hasPositiveROI: results?.calculation?.hasPositiveROI ?? false,
+    isAtMinimumStaff: results?.calculation?.isAtMinimumStaff ?? false,
+    isUnderstaffed: results?.calculation?.isUnderstaffed ?? false,
+  };
+
+  const timestamp = results?.timestamp;
+  const date = new Date(timestamp || new Date()).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -340,16 +409,16 @@ function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['resul
       React.createElement(Text, { style: styles.subtitle },
         `${branchData.institutionName} - ${branchData.branchName}`
       ),
-      contactInfo.firstName && React.createElement(Text, {
+      contactInfo?.firstName && React.createElement(Text, {
         style: { fontSize: 9, color: colors.gray, textAlign: 'center', marginBottom: 15 }
-      }, `Prepared for: ${contactInfo.firstName} ${contactInfo.lastName}`),
+      }, `Prepared for: ${contactInfo.firstName} ${contactInfo.lastName || ''}`),
 
       // Executive Summary
       React.createElement(View, { style: styles.execSummary },
         React.createElement(Text, { style: styles.execTitle }, 'Estimated Annual Savings'),
         React.createElement(Text, { style: styles.execValue }, formatCurrency(calculation.netAnnualROI)),
         React.createElement(Text, { style: styles.execSubtext },
-          `Based on ${formatFTE(calculation.fteSavings)} FTE optimization | ${Math.round(calculation.roiPercentage)}% annual ROI`
+          `Based on ${formatFTE(calculation.fteSavings)} FTE optimization | ${Math.round(calculation.roiPercentage || 0)}% annual ROI`
         )
       ),
 
@@ -446,6 +515,23 @@ function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['resul
           React.createElement(View, { style: styles.whyQdsItem },
             React.createElement(Text, { style: styles.whyQdsBullet }, '✓'),
             React.createElement(Text, { style: styles.whyQdsText }, 'Partnership with leading TCR manufacturers for best-in-class equipment')
+          )
+        )
+      ),
+
+      // Continue Your Journey - Resources
+      React.createElement(View, { style: styles.section },
+        React.createElement(Text, { style: styles.sectionTitle }, 'Continue Your Journey'),
+        React.createElement(View, { style: styles.resourcesGrid },
+          ...QDS_RESOURCES.slice(0, 4).map((resource, index) =>
+            React.createElement(View, { key: index, style: styles.resourceCard },
+              React.createElement(Text, { style: styles.resourceType },
+                resource.type === 'guide' ? 'Ultimate Guide' : resource.type === 'product' ? 'Product Info' : 'Blog Article'
+              ),
+              React.createElement(Text, { style: styles.resourceTitle }, resource.title),
+              React.createElement(Text, { style: styles.resourceDesc }, resource.description),
+              React.createElement(Text, { style: styles.resourceUrl }, resource.url)
+            )
           )
         )
       ),
