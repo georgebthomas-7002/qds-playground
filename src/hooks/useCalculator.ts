@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import {
   BranchData,
   ContactInfo,
@@ -190,6 +190,10 @@ export const useCalculator = create<CalculatorState>()(
     }),
     {
       name: 'qds-calculator-storage',
+      // Use sessionStorage instead of localStorage
+      // This ensures data is cleared when the browser/tab is closed
+      // so returning visitors always start fresh
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         branchData: state.branchData,
         contactInfo: state.contactInfo,
