@@ -6,6 +6,8 @@ import {
   TRANSACTIONS_PER_FTE_MONTHLY,
   ANNUAL_TCR_COST,
   TCR_CAPITAL_COST,
+  PAIN_POINTS,
+  QDS_CONTACT_URL,
 } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
@@ -22,7 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, results, contactInfo } = result.data;
+    const { emails, results, contactInfo, painPoints } = result.data;
 
     // Check if Resend is configured
     if (!process.env.RESEND_API_KEY) {
@@ -37,28 +39,33 @@ export async function POST(request: NextRequest) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Generate the email HTML
-    const emailHtml = generateEmailHtml(results, contactInfo);
+    const emailHtml = generateEmailHtml(results, contactInfo, painPoints || []);
 
-    // Send the email
-    const { data, error } = await resend.emails.send({
-      from: 'QDS ROI Calculator <noreply@qdsdata.com>',
-      to: email,
-      subject: `Your TCR ROI Analysis - ${results.branchData.institutionName}`,
-      html: emailHtml,
-    });
+    // Send emails to all recipients
+    const emailPromises = emails.map((email) =>
+      resend.emails.send({
+        from: 'QDS ROI Calculator <noreply@qdsdata.com>',
+        to: email,
+        subject: `TCR ROI Analysis - ${results.branchData.institutionName}`,
+        html: emailHtml,
+      })
+    );
 
-    if (error) {
-      console.error('Resend error:', error);
-      return NextResponse.json(
-        { error: 'Failed to send email' },
-        { status: 500 }
-      );
+    const emailResults = await Promise.allSettled(emailPromises);
+
+    // Check for any failures
+    const failures = emailResults.filter((r) => r.status === 'rejected');
+    if (failures.length > 0) {
+      console.error('Some emails failed to send:', failures);
     }
+
+    const successes = emailResults.filter((r) => r.status === 'fulfilled');
 
     return NextResponse.json({
       success: true,
-      message: 'Email sent successfully',
-      emailId: data?.id,
+      message: `Email sent to ${successes.length} recipient(s)`,
+      sentTo: emails.slice(0, successes.length),
+      failedCount: failures.length,
     });
   } catch (error) {
     console.error('Send report error:', error);
@@ -98,9 +105,15 @@ function generateEmailHtml(
     firstName: string;
     lastName: string;
     email: string;
-  }
+  },
+  painPoints: string[]
 ): string {
   const { branchData, calculation } = results;
+
+  // Get readable pain point labels
+  const painPointLabels = painPoints
+    .map((id) => PAIN_POINTS.find((p) => p.id === id)?.label || id)
+    .filter(Boolean);
 
   return `
 <!DOCTYPE html>
@@ -264,18 +277,36 @@ function generateEmailHtml(
                 </tr>
               </table>
 
+              ${
+                painPointLabels.length > 0
+                  ? `
+              <!-- Challenges Addressed -->
+              <h2 style="color: #111827; font-size: 16px; margin: 0 0 15px 0;">Challenges to Address</h2>
+              <table role="presentation" style="width: 100%; background-color: #f0fdfa; border-radius: 8px; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <ul style="margin: 0; padding-left: 20px; color: #0d9488;">
+                      ${painPointLabels.map((label) => `<li style="margin-bottom: 8px; color: #374151;">${label}</li>`).join('')}
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+              `
+                  : ''
+              }
+
               <!-- CTA -->
               <table role="presentation" style="width: 100%; background-color: #0d9488; border-radius: 8px;">
                 <tr>
                   <td style="padding: 25px; text-align: center;">
                     <p style="color: #ffffff; margin: 0 0 15px 0; font-size: 18px; font-weight: bold;">
-                      Ready to Discuss Your Options?
+                      Ready to Start a Conversation?
                     </p>
                     <p style="color: rgba(255,255,255,0.8); margin: 0 0 20px 0; font-size: 14px;">
                       Our team is ready to help you implement TCR technology at your institution.
                     </p>
-                    <a href="mailto:info@qdsdata.com" style="display: inline-block; background-color: #ffffff; color: #0d9488; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">
-                      Contact QDS Today
+                    <a href="${QDS_CONTACT_URL}" style="display: inline-block; background-color: #ffffff; color: #0d9488; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">
+                      Contact Quality Data Systems
                     </a>
                   </td>
                 </tr>

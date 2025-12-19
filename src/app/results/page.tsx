@@ -16,6 +16,7 @@ import {
 } from '@/components/results';
 import { formatCurrency, formatFTE, formatNumber } from '@/lib/calculations';
 import { trackEvent } from '@/lib/utils';
+import { QDS_LOGO_URL, QDS_CONTACT_URL } from '@/lib/constants';
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -24,6 +25,8 @@ export default function ResultsPage() {
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [teamEmails, setTeamEmails] = useState('');
+  const [sendToSelf, setSendToSelf] = useState(true);
 
   // Mark results as viewed
   useEffect(() => {
@@ -47,8 +50,27 @@ export default function ResultsPage() {
 
   const { calculation } = results;
 
-  const handleEmailReport = async () => {
-    if (!contactInfo.email) return;
+  const handleSendResults = async () => {
+    const emails: string[] = [];
+
+    // Add user's email if sending to self
+    if (sendToSelf && contactInfo.email) {
+      emails.push(contactInfo.email);
+    }
+
+    // Parse and add team emails
+    if (teamEmails.trim()) {
+      const additionalEmails = teamEmails
+        .split(/[,;\s]+/)
+        .map(e => e.trim())
+        .filter(e => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+      emails.push(...additionalEmails);
+    }
+
+    if (emails.length === 0) {
+      setEmailError('Please add at least one email address');
+      return;
+    }
 
     setEmailSending(true);
     setEmailError(null);
@@ -58,9 +80,11 @@ export default function ResultsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: contactInfo.email,
+          emails,
           results,
           contactInfo,
+          branchData: results.branchData,
+          painPoints: results.branchData.painPoints,
         }),
       });
 
@@ -69,7 +93,7 @@ export default function ResultsPage() {
       }
 
       setEmailSent(true);
-      trackEvent('email_submitted');
+      trackEvent('email_submitted', { emailCount: emails.length });
     } catch (error) {
       setEmailError('Failed to send email. Please try again.');
     } finally {
@@ -92,11 +116,12 @@ export default function ResultsPage() {
             className="flex items-center gap-3 transition-opacity hover:opacity-80"
           >
             <Image
-              src="/qds-logo.svg"
+              src={QDS_LOGO_URL}
               alt="QDS Logo"
               width={40}
               height={40}
               className="rounded-lg"
+              unoptimized
             />
             <div>
               <p className="text-sm font-bold text-brand-navy">
@@ -233,34 +258,74 @@ export default function ResultsPage() {
           </div>
         </Card>
 
-        {/* Email Report CTA */}
-        {contactInfo.email && !emailSent && (
-          <Card className="border-brand-teal/20 bg-brand-teal/5">
-            <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+        {/* Share Results CTA */}
+        {!emailSent ? (
+          <Card className="mb-8 border-brand-teal/20 bg-brand-teal/5">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-teal/20">
+                  <svg className="h-5 w-5 text-brand-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Share This Report
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Send these results to yourself or share with your team
+                  </p>
+                </div>
+              </div>
+
+              {/* Send to self checkbox */}
+              {contactInfo.email && (
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={sendToSelf}
+                    onChange={(e) => setSendToSelf(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-brand-teal focus:ring-brand-teal"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Send to my email ({contactInfo.email})
+                  </span>
+                </label>
+              )}
+
+              {/* Team emails input */}
               <div>
-                <h3 className="font-semibold text-gray-900">
-                  Get Your Full Report
-                </h3>
-                <p className="text-sm text-gray-600">
-                  We&apos;ll send a detailed PDF to {contactInfo.email}
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Share with team members
+                </label>
+                <input
+                  type="text"
+                  value={teamEmails}
+                  onChange={(e) => setTeamEmails(e.target.value)}
+                  placeholder="Enter email addresses (comma separated)"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Separate multiple emails with commas
                 </p>
               </div>
+
               <Button
-                onClick={handleEmailReport}
+                onClick={handleSendResults}
                 isLoading={emailSending}
                 disabled={emailSending}
+                className="w-full sm:w-auto"
               >
-                {emailSending ? 'Sending...' : 'Email My Report'}
+                {emailSending ? 'Sending...' : 'Send Report'}
               </Button>
-            </div>
-            {emailError && (
-              <p className="mt-2 text-sm text-red-500">{emailError}</p>
-            )}
-          </Card>
-        )}
 
-        {emailSent && (
-          <Card className="border-green-200 bg-green-50">
+              {emailError && (
+                <p className="text-sm text-red-500">{emailError}</p>
+              )}
+            </div>
+          </Card>
+        ) : (
+          <Card className="mb-8 border-green-200 bg-green-50">
             <div className="flex items-center gap-3">
               <svg
                 className="h-6 w-6 text-green-500"
@@ -278,37 +343,29 @@ export default function ResultsPage() {
               <div>
                 <p className="font-semibold text-green-800">Report Sent!</p>
                 <p className="text-sm text-green-600">
-                  Check your inbox at {contactInfo.email}
+                  The report has been sent to all recipients
                 </p>
               </div>
             </div>
           </Card>
         )}
 
-        {/* Contact CTA */}
+        {/* Ready to Start a Conversation CTA */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-10 rounded-xl bg-brand-navy p-8 text-center text-white"
+          className="rounded-xl bg-brand-navy p-8 text-center text-white"
         >
-          <h2 className="text-2xl font-bold">Ready to Get Started?</h2>
+          <h2 className="text-2xl font-bold">Ready to Start a Conversation?</h2>
           <p className="mt-2 text-white/70">
             Let&apos;s discuss how QDS can help implement TCR technology at your
-            institution.
+            institution and achieve these savings.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a href="tel:+17045551234">
-              <Button variant="secondary" className="bg-white text-brand-navy">
-                Call (704) 555-1234
-              </Button>
-            </a>
-            <a href="mailto:info@qdsdata.com">
-              <Button
-                variant="outline"
-                className="border-white text-white hover:bg-white/10"
-              >
-                Email Us
+          <div className="mt-6">
+            <a href={QDS_CONTACT_URL} target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary" className="bg-white text-brand-navy hover:bg-gray-100">
+                Contact Quality Data Systems
               </Button>
             </a>
           </div>

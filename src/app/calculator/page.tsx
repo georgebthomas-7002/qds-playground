@@ -12,7 +12,7 @@ import {
   PainPointsStep,
   ContactStep,
 } from '@/components/calculator';
-import { CALCULATOR_STEPS } from '@/lib/constants';
+import { CALCULATOR_STEPS, QDS_LOGO_URL } from '@/lib/constants';
 import { trackEvent } from '@/lib/utils';
 
 export default function CalculatorPage() {
@@ -54,11 +54,12 @@ export default function CalculatorPage() {
             className="flex items-center gap-3 transition-opacity hover:opacity-80"
           >
             <Image
-              src="/qds-logo.svg"
+              src={QDS_LOGO_URL}
               alt="QDS Logo"
               width={40}
               height={40}
               className="rounded-lg"
+              unoptimized
             />
             <div>
               <p className="text-sm font-bold text-brand-navy">

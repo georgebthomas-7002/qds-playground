@@ -114,6 +114,15 @@ export const API_ENDPOINTS = {
 } as const;
 
 // ============================================
+// EXTERNAL URLS
+// ============================================
+
+export const QDS_LOGO_URL =
+  'https://www-qualitydatasystems-com.sandbox.hs-sites.com/hs-fs/hubfs/new-no%20shadow-1.png?width=80&height=80&name=new-no%20shadow-1.png';
+
+export const QDS_CONTACT_URL = 'https://www.qualitydatasystems.com/contact-us';
+
+// ============================================
 // ANALYTICS
 // ============================================
 
