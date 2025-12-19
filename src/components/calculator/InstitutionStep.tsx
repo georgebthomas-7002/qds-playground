@@ -6,23 +6,34 @@ import { useCalculator } from '@/hooks/useCalculator';
 import { Button, Input, Card } from '@/components/ui';
 import { institutionSchema } from '@/lib/validations';
 
+interface FormErrors {
+  institutionName?: string;
+  institutionWebsite?: string;
+}
+
 export function InstitutionStep() {
   const { branchData, updateBranchData, nextStep } = useCalculator();
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const result = institutionSchema.safeParse({
       institutionName: branchData.institutionName,
+      institutionWebsite: branchData.institutionWebsite || '',
     });
 
     if (!result.success) {
-      setError(result.error.errors[0]?.message || 'Please enter your institution name');
+      const fieldErrors: FormErrors = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0] as keyof FormErrors;
+        fieldErrors[field] = err.message;
+      });
+      setErrors(fieldErrors);
       return;
     }
 
-    setError(null);
+    setErrors({});
     nextStep();
   };
 
@@ -43,7 +54,7 @@ export function InstitutionStep() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Institution Name"
             name="institutionName"
@@ -51,12 +62,26 @@ export function InstitutionStep() {
             value={branchData.institutionName || ''}
             onChange={(e) => {
               updateBranchData({ institutionName: e.target.value });
-              setError(null);
+              setErrors((prev) => ({ ...prev, institutionName: undefined }));
             }}
-            error={error || undefined}
+            error={errors.institutionName}
             hint="The name of your bank or credit union"
             required
             autoFocus
+          />
+
+          <Input
+            label="Institution Website"
+            name="institutionWebsite"
+            type="url"
+            placeholder="e.g., https://www.firstnationalbank.com"
+            value={branchData.institutionWebsite || ''}
+            onChange={(e) => {
+              updateBranchData({ institutionWebsite: e.target.value });
+              setErrors((prev) => ({ ...prev, institutionWebsite: undefined }));
+            }}
+            error={errors.institutionWebsite}
+            hint="Optional - helps us better identify your institution"
           />
 
           <div className="mt-8 flex justify-end">

@@ -1,6 +1,7 @@
 // Calculator Input Types
 export interface BranchData {
   institutionName: string;
+  institutionWebsite?: string; // Company domain for HubSpot company association
   branchName: string;
   monthlyTransactions: number;
   currentFTEs: number;

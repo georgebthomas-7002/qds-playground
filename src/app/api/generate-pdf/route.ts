@@ -519,11 +519,11 @@ function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['resul
         )
       ),
 
-      // Continue Your Journey - Resources
+      // Continue Your Journey - Resources (show all 6)
       React.createElement(View, { style: styles.section },
         React.createElement(Text, { style: styles.sectionTitle }, 'Continue Your Journey'),
         React.createElement(View, { style: styles.resourcesGrid },
-          ...QDS_RESOURCES.slice(0, 4).map((resource, index) =>
+          ...QDS_RESOURCES.map((resource, index) =>
             React.createElement(View, { key: index, style: styles.resourceCard },
               React.createElement(Text, { style: styles.resourceType },
                 resource.type === 'guide' ? 'Ultimate Guide' : resource.type === 'product' ? 'Product Info' : 'Blog Article'
@@ -563,9 +563,30 @@ export async function POST(request: NextRequest) {
     const body: PDFRequestBody = await request.json();
     const { results, contactInfo, uploadToHubSpot, hubSpotContactId } = body;
 
+    // Validate we have required data
+    if (!results || !results.branchData || !results.calculation) {
+      console.error('PDF generation error: Missing required data', {
+        hasResults: !!results,
+        hasBranchData: !!results?.branchData,
+        hasCalculation: !!results?.calculation
+      });
+      return NextResponse.json(
+        { error: 'Missing required data for PDF generation' },
+        { status: 400 }
+      );
+    }
+
+    // Safe filename
+    const institutionName = results.branchData?.institutionName || 'Report';
+    const safeFilename = `TCR-ROI-Report-${institutionName.replace(/[^a-zA-Z0-9-]/g, '-')}.pdf`;
+
+    console.log('Generating PDF for:', institutionName);
+
     // Generate PDF
     const pdfDoc = React.createElement(ROIReportPDF, { results, contactInfo });
     const pdfBuffer = await ReactPDF.renderToBuffer(pdfDoc as any);
+
+    console.log('PDF generated successfully, size:', pdfBuffer.length);
 
     // If HubSpot upload is requested
     if (uploadToHubSpot && process.env.HUBSPOT_ACCESS_TOKEN) {
@@ -573,7 +594,7 @@ export async function POST(request: NextRequest) {
         // Upload file to HubSpot
         const fileUploadResult = await uploadToHubSpotFiles(
           pdfBuffer,
-          `TCR-ROI-Report-${results.branchData.institutionName.replace(/\s+/g, '-')}.pdf`,
+          safeFilename,
           contactInfo.email
         );
 
@@ -603,13 +624,18 @@ export async function POST(request: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="TCR-ROI-Report-${results.branchData.institutionName.replace(/\s+/g, '-')}.pdf"`,
+        'Content-Disposition': `attachment; filename="${safeFilename}"`,
       },
     });
   } catch (error) {
     console.error('PDF generation error:', error);
+    // Return more details in development
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to generate PDF' },
+      {
+        error: 'Failed to generate PDF',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     );
   }

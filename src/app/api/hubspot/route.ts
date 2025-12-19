@@ -71,37 +71,46 @@ export async function POST(request: NextRequest) {
 - Has Positive ROI: ${data.hasPositiveROI ? 'Yes' : 'No'}
 - Pain Points: ${data.painPoints.length > 0 ? data.painPoints.join(', ') : 'None selected'}`;
 
+    // Build fields array - conditionally include website if provided
+    const fields = [
+      // Standard HubSpot contact properties (these always work)
+      { name: 'firstname', value: data.firstName },
+      { name: 'lastname', value: data.lastName },
+      { name: 'email', value: data.email },
+      { name: 'phone', value: data.phone || '' },
+      { name: 'company', value: data.branchName }, // Branch Name → Company Name
+      { name: 'jobtitle', value: data.jobTitle || '' },
+
+      // Store all ROI data in message/notes field (always works, no custom properties needed)
+      { name: 'message', value: roiSummary },
+
+      // Custom properties - these only work if added to HubSpot form
+      // Institution & Branch Information
+      { name: 'institution_name', value: data.institutionName },
+      { name: 'monthly_transactions', value: data.monthlyTransactions.toString() },
+      { name: 'current_ftes', value: data.currentFTEs.toString() },
+      { name: 'annual_fte_cost', value: data.annualFTECost.toString() },
+
+      // ROI Results
+      { name: 'estimated_roi', value: data.estimatedROI.toString() },
+      { name: 'five_year_roi', value: data.fiveYearROI.toString() },
+      { name: 'fte_savings', value: data.fteSavings.toString() },
+      { name: 'payback_period_months', value: data.paybackPeriodMonths.toString() },
+      { name: 'has_positive_roi', value: data.hasPositiveROI ? 'true' : 'false' },
+
+      // Pain Points
+      { name: 'pain_points', value: data.painPoints.join('; ') },
+      { name: 'pain_point_count', value: data.painPoints.length.toString() },
+    ];
+
+    // Add website field if provided - this helps HubSpot with company association
+    // The 'website' field is a standard Company property that HubSpot uses for matching
+    if (data.institutionWebsite) {
+      fields.push({ name: 'website', value: data.institutionWebsite });
+    }
+
     const hubspotPayload = {
-      fields: [
-        // Standard HubSpot contact properties (these always work)
-        { name: 'firstname', value: data.firstName },
-        { name: 'lastname', value: data.lastName },
-        { name: 'email', value: data.email },
-        { name: 'phone', value: data.phone || '' },
-        { name: 'company', value: data.branchName }, // Branch Name → Company
-        { name: 'jobtitle', value: data.jobTitle || '' },
-
-        // Store all ROI data in message/notes field (always works, no custom properties needed)
-        { name: 'message', value: roiSummary },
-
-        // Custom properties - these only work if added to HubSpot form
-        // Institution & Branch Information
-        { name: 'institution_name', value: data.institutionName },
-        { name: 'monthly_transactions', value: data.monthlyTransactions.toString() },
-        { name: 'current_ftes', value: data.currentFTEs.toString() },
-        { name: 'annual_fte_cost', value: data.annualFTECost.toString() },
-
-        // ROI Results
-        { name: 'estimated_roi', value: data.estimatedROI.toString() },
-        { name: 'five_year_roi', value: data.fiveYearROI.toString() },
-        { name: 'fte_savings', value: data.fteSavings.toString() },
-        { name: 'payback_period_months', value: data.paybackPeriodMonths.toString() },
-        { name: 'has_positive_roi', value: data.hasPositiveROI ? 'true' : 'false' },
-
-        // Pain Points
-        { name: 'pain_points', value: data.painPoints.join('; ') },
-        { name: 'pain_point_count', value: data.painPoints.length.toString() },
-      ],
+      fields,
       context: {
         pageUri: request.headers.get('referer') || 'https://roi.qdsdata.com',
         pageName: 'TCR ROI Calculator',
@@ -130,16 +139,23 @@ export async function POST(request: NextRequest) {
       console.error('HubSpot API error (full payload):', errorText);
 
       // Fallback: Try with only standard HubSpot fields
+      const fallbackFields = [
+        { name: 'firstname', value: data.firstName },
+        { name: 'lastname', value: data.lastName },
+        { name: 'email', value: data.email },
+        { name: 'phone', value: data.phone || '' },
+        { name: 'company', value: data.branchName },
+        { name: 'jobtitle', value: data.jobTitle || '' },
+        { name: 'message', value: roiSummary },
+      ];
+
+      // Include website in fallback if provided
+      if (data.institutionWebsite) {
+        fallbackFields.push({ name: 'website', value: data.institutionWebsite });
+      }
+
       const fallbackPayload = {
-        fields: [
-          { name: 'firstname', value: data.firstName },
-          { name: 'lastname', value: data.lastName },
-          { name: 'email', value: data.email },
-          { name: 'phone', value: data.phone || '' },
-          { name: 'company', value: data.branchName },
-          { name: 'jobtitle', value: data.jobTitle || '' },
-          { name: 'message', value: roiSummary },
-        ],
+        fields: fallbackFields,
         context: hubspotPayload.context,
       };
 

@@ -243,6 +243,14 @@ export const QDS_RESOURCES: QDSResource[] = [
     type: 'blog',
     cta: 'Get the Playbook',
   },
+  {
+    id: 'why-qds',
+    title: 'Why Choose Quality Data Systems',
+    description: 'Discover what sets QDS apart—40+ years of experience, dedicated service teams, and a partnership approach that ensures your success with TCR technology.',
+    url: 'https://www.qualitydatasystems.com/why-choose-qds',
+    type: 'product',
+    cta: 'Learn About QDS',
+  },
 ];
 
 // ============================================
