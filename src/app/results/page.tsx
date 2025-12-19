@@ -136,12 +136,14 @@ export default function ResultsPage() {
         // Try to read the error message if it's JSON
         if (blob.type === 'application/json') {
           const errorText = await blob.text();
+          let errorMessage = 'Failed to generate PDF';
           try {
             const errorData = JSON.parse(errorText);
-            throw new Error(errorData.error || 'Failed to generate PDF');
+            errorMessage = errorData.error || errorMessage;
           } catch {
-            throw new Error('Failed to generate PDF');
+            // JSON parse failed, use default message
           }
+          throw new Error(errorMessage);
         }
         throw new Error('Invalid PDF response');
       }
@@ -164,7 +166,8 @@ export default function ResultsPage() {
       trackEvent('pdf_downloaded');
     } catch (error) {
       console.error('PDF generation error:', error);
-      setPdfError('Failed to generate PDF. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setPdfError(errorMessage);
       setHubSpotStatus('error');
     } finally {
       setPdfGenerating(false);
