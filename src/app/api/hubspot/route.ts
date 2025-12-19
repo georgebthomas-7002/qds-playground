@@ -68,14 +68,42 @@ async function findCompanyByDomain(domain: string, accessToken: string): Promise
   }
 }
 
-// Helper: Create a company with the given domain
-async function createCompany(domain: string, companyName: string, accessToken: string): Promise<string | null> {
-  console.log('[createCompany] Creating company with domain:', domain, 'name:', companyName);
+// Type for company data with all ROI properties
+interface CompanyData {
+  domain: string;
+  name: string;
+  institutionName: string;
+  monthlyTransactions: number;
+  currentFTEs: number;
+  annualFTECost: number;
+  estimatedROI: number;
+  fiveYearROI: number;
+  fteSavings: number;
+  paybackPeriodMonths: number;
+  painPoints: string[];
+}
+
+// Helper: Create a company with the given domain and all ROI properties
+async function createCompany(companyData: CompanyData, accessToken: string): Promise<string | null> {
+  console.log('[createCompany] Creating company with domain:', companyData.domain, 'name:', companyData.name);
 
   const requestBody = {
     properties: {
-      domain: domain,    // Maps to Company Domain in HubSpot
-      name: companyName, // Maps to Company Name in HubSpot
+      // Standard company properties
+      domain: companyData.domain,           // Maps to Company Domain in HubSpot
+      name: companyData.name,               // Maps to Company Name in HubSpot
+
+      // TCR ROI Calculator custom properties (must exist in HubSpot as Company properties)
+      institution_name: companyData.institutionName,
+      monthly_transactions: companyData.monthlyTransactions.toString(),
+      current_ftes: companyData.currentFTEs.toString(),
+      annual_fte_cost: companyData.annualFTECost.toString(),
+      estimated_roi: companyData.estimatedROI.toString(),
+      five_year_roi: companyData.fiveYearROI.toString(),
+      fte_savings: companyData.fteSavings.toString(),
+      payback_period_months: companyData.paybackPeriodMonths.toString(),
+      pain_points: companyData.painPoints.join('; '),
+      pain_point_count: companyData.painPoints.length.toString(),
     },
   };
   console.log('[createCompany] Request body:', JSON.stringify(requestBody));
@@ -105,6 +133,54 @@ async function createCompany(domain: string, companyName: string, accessToken: s
   } catch (error) {
     console.error('[createCompany] Error:', error);
     return null;
+  }
+}
+
+// Helper: Update an existing company with ROI properties
+async function updateCompany(companyId: string, companyData: CompanyData, accessToken: string): Promise<boolean> {
+  console.log('[updateCompany] Updating company:', companyId, 'with ROI data');
+
+  const requestBody = {
+    properties: {
+      // TCR ROI Calculator custom properties
+      institution_name: companyData.institutionName,
+      monthly_transactions: companyData.monthlyTransactions.toString(),
+      current_ftes: companyData.currentFTEs.toString(),
+      annual_fte_cost: companyData.annualFTECost.toString(),
+      estimated_roi: companyData.estimatedROI.toString(),
+      five_year_roi: companyData.fiveYearROI.toString(),
+      fte_savings: companyData.fteSavings.toString(),
+      payback_period_months: companyData.paybackPeriodMonths.toString(),
+      pain_points: companyData.painPoints.join('; '),
+      pain_point_count: companyData.painPoints.length.toString(),
+    },
+  };
+  console.log('[updateCompany] Request body:', JSON.stringify(requestBody));
+
+  try {
+    const response = await fetch(`https://api.hubapi.com/crm/v3/objects/companies/${companyId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const responseText = await response.text();
+    console.log('[updateCompany] Response status:', response.status);
+    console.log('[updateCompany] Response body:', responseText);
+
+    if (!response.ok) {
+      console.error('[updateCompany] Company update error:', responseText);
+      return false;
+    }
+
+    console.log('[updateCompany] Successfully updated company');
+    return true;
+  } catch (error) {
+    console.error('[updateCompany] Error:', error);
+    return false;
   }
 }
 
@@ -203,24 +279,27 @@ async function associateContactWithCompany(
 // Helper: Create or find company and associate with contact
 async function ensureCompanyAssociation(
   email: string,
-  domain: string,
-  companyName: string,
+  companyData: CompanyData,
   accessToken: string
 ): Promise<void> {
-  console.log('Starting company association for domain:', domain);
+  console.log('[ensureCompanyAssociation] Starting for domain:', companyData.domain);
+  console.log('[ensureCompanyAssociation] Company data:', JSON.stringify(companyData));
 
   // Step 1: Find or create the company
-  let companyId = await findCompanyByDomain(domain, accessToken);
+  let companyId = await findCompanyByDomain(companyData.domain, accessToken);
 
   if (!companyId) {
-    console.log('Company not found, creating new company for domain:', domain);
-    companyId = await createCompany(domain, companyName, accessToken);
+    console.log('[ensureCompanyAssociation] Company not found, creating new company');
+    companyId = await createCompany(companyData, accessToken);
   } else {
-    console.log('Found existing company with ID:', companyId);
+    console.log('[ensureCompanyAssociation] Found existing company with ID:', companyId);
+    // Update existing company with latest ROI data
+    console.log('[ensureCompanyAssociation] Updating existing company with ROI data');
+    await updateCompany(companyId, companyData, accessToken);
   }
 
   if (!companyId) {
-    console.error('Failed to find or create company');
+    console.error('[ensureCompanyAssociation] Failed to find or create company');
     return;
   }
 
@@ -234,24 +313,24 @@ async function ensureCompanyAssociation(
     contactId = await findContactByEmail(email, accessToken);
     retries--;
     if (!contactId && retries > 0) {
-      console.log('Contact not found yet, retrying... (' + retries + ' attempts left)');
+      console.log('[ensureCompanyAssociation] Contact not found yet, retrying... (' + retries + ' attempts left)');
     }
   }
 
   if (!contactId) {
-    console.error('Could not find contact after form submission');
+    console.error('[ensureCompanyAssociation] Could not find contact after form submission');
     return;
   }
 
-  console.log('Found contact with ID:', contactId);
+  console.log('[ensureCompanyAssociation] Found contact with ID:', contactId);
 
   // Step 3: Associate the contact with the company
   const success = await associateContactWithCompany(contactId, companyId, accessToken);
 
   if (success) {
-    console.log('Successfully associated contact', contactId, 'with company', companyId);
+    console.log('[ensureCompanyAssociation] Successfully associated contact', contactId, 'with company', companyId);
   } else {
-    console.error('Failed to associate contact with company');
+    console.error('[ensureCompanyAssociation] Failed to associate contact with company');
   }
 }
 
@@ -424,13 +503,28 @@ export async function POST(request: NextRequest) {
 
     if (data.institutionWebsite && accessToken) {
       console.log('[HubSpot API] Starting company creation/association...');
-      console.log('  - Domain to use:', data.institutionWebsite);
-      console.log('  - Company name to use:', data.institutionName);
+
+      // Build company data with all ROI properties
+      const companyData: CompanyData = {
+        domain: data.institutionWebsite,
+        name: data.institutionName,
+        institutionName: data.institutionName,
+        monthlyTransactions: data.monthlyTransactions,
+        currentFTEs: data.currentFTEs,
+        annualFTECost: data.annualFTECost,
+        estimatedROI: data.estimatedROI,
+        fiveYearROI: data.fiveYearROI,
+        fteSavings: data.fteSavings,
+        paybackPeriodMonths: data.paybackPeriodMonths,
+        painPoints: data.painPoints,
+      };
+
+      console.log('[HubSpot API] Company data:', JSON.stringify(companyData));
+
       try {
         await ensureCompanyAssociation(
           data.email,
-          data.institutionWebsite,  // This becomes company 'domain' property
-          data.institutionName,      // This becomes company 'name' property
+          companyData,
           accessToken
         );
         console.log('[HubSpot API] Company association completed successfully');
