@@ -61,10 +61,10 @@ export function ContactStep() {
           email: contactInfo.email,
           phone: contactInfo.phone,
           jobTitle: contactInfo.jobTitle,
-          company: branchData.institutionName,
 
-          // Branch Information
-          branchName: branchData.branchName,
+          // Institution & Branch Information
+          institutionName: branchData.institutionName, // → custom 'institution_name' property
+          branchName: branchData.branchName, // → HubSpot 'company' field
           monthlyTransactions: branchData.monthlyTransactions || 0,
           currentFTEs: branchData.currentFTEs || 0,
           annualFTECost: branchData.annualFTECost || 42000,

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui';
 import { trackEvent } from '@/lib/utils';
-import { QDS_LOGO_URL } from '@/lib/constants';
+import { QDS_LOGO_URL, QDS_CONTACT_URL } from '@/lib/constants';
 
 export default function HomePage() {
   const handleStartClick = () => {
@@ -33,9 +33,16 @@ export default function HomePage() {
               <p className="text-xs text-gray-500">TCR ROI Calculator</p>
             </div>
           </div>
-          <Link href="/calculator" onClick={handleStartClick}>
-            <Button size="sm">Start Calculator</Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/calculator" onClick={handleStartClick}>
+              <Button size="sm">Start Calculator</Button>
+            </Link>
+            <a href={QDS_CONTACT_URL} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" className="bg-brand-lime text-brand-navy hover:bg-brand-lime/90">
+                Start a Conversation
+              </Button>
+            </a>
+          </div>
         </div>
       </header>
 

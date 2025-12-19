@@ -7,8 +7,12 @@ import { hubspotSubmissionSchema } from '@/lib/validations';
  * This endpoint submits lead data to HubSpot using the Forms API.
  * Documentation: https://developers.hubspot.com/docs/api/marketing/forms
  *
+ * Field Mapping:
+ * - Branch Name → HubSpot 'company' field (standard Company Name)
+ * - Institution Name → custom 'institution_name' property
+ *
  * Required HubSpot Custom Properties (see bottom of file for details):
- * - branch_name (Single-line text)
+ * - institution_name (Single-line text) - Financial institution name
  * - monthly_transactions (Number)
  * - current_ftes (Number)
  * - annual_fte_cost (Number)
@@ -17,7 +21,6 @@ import { hubspotSubmissionSchema } from '@/lib/validations';
  * - fte_savings (Number)
  * - payback_period_months (Number)
  * - pain_points (Multiple checkboxes or Multi-line text)
- * - tcr_interest_level (Dropdown)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -58,11 +61,11 @@ export async function POST(request: NextRequest) {
         { objectTypeId: '0-1', name: 'lastname', value: data.lastName },
         { objectTypeId: '0-1', name: 'email', value: data.email },
         { objectTypeId: '0-1', name: 'phone', value: data.phone || '' },
-        { objectTypeId: '0-1', name: 'company', value: data.company },
+        { objectTypeId: '0-1', name: 'company', value: data.branchName }, // Branch Name → Company
         { objectTypeId: '0-1', name: 'jobtitle', value: data.jobTitle || '' },
 
-        // Custom properties - Branch Information
-        { objectTypeId: '0-1', name: 'branch_name', value: data.branchName },
+        // Custom properties - Institution & Branch Information
+        { objectTypeId: '0-1', name: 'institution_name', value: data.institutionName }, // Institution Name (custom)
         {
           objectTypeId: '0-1',
           name: 'monthly_transactions',
@@ -180,12 +183,18 @@ export async function POST(request: NextRequest) {
  * To use this integration, you need to create the following custom properties
  * in your HubSpot account under Settings > Properties > Contact Properties:
  *
- * BRANCH INFORMATION PROPERTIES:
+ * FIELD MAPPING:
+ * - Branch Name from calculator → HubSpot 'company' field (standard Company Name)
+ * - Institution Name from calculator → custom 'institution_name' property
  *
- * 1. branch_name
- *    - Label: Branch Name
+ * INSTITUTION & BRANCH PROPERTIES:
+ *
+ * 1. institution_name
+ *    - Label: Institution Name
  *    - Type: Single-line text
- *    - Group: Contact information (or create a "TCR Calculator" group)
+ *    - Group: TCR Calculator
+ *    - Description: The financial institution name (e.g., "First National Bank")
+ *    - Note: Branch Name is stored in the standard 'company' field
  *
  * 2. monthly_transactions
  *    - Label: Monthly Transactions

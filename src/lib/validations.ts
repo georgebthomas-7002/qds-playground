@@ -121,10 +121,10 @@ export const hubspotSubmissionSchema = z.object({
   email: z.string().email(),
   phone: z.string().optional(),
   jobTitle: z.string().optional(),
-  company: z.string(),
 
-  // Branch Information
-  branchName: z.string(),
+  // Institution & Branch Information
+  institutionName: z.string(), // Maps to custom 'institution_name' property
+  branchName: z.string(), // Maps to HubSpot standard 'company' field
   monthlyTransactions: z.number(),
   currentFTEs: z.number(),
   annualFTECost: z.number(),
