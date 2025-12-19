@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import ReactPDF from '@react-pdf/renderer';
+import { renderToBuffer } from '@react-pdf/renderer';
 import React from 'react';
 import {
   Document,
@@ -584,7 +584,7 @@ export async function POST(request: NextRequest) {
 
     // Generate PDF
     const pdfDoc = React.createElement(ROIReportPDF, { results, contactInfo });
-    const pdfBuffer = await ReactPDF.renderToBuffer(pdfDoc as any);
+    const pdfBuffer = await renderToBuffer(pdfDoc as any);
 
     console.log('PDF generated successfully, size:', pdfBuffer.length);
 
