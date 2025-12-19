@@ -20,7 +20,7 @@ export function StepIndicator({ currentStep, className }: StepIndicatorProps) {
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
           <motion.div
-            className="h-full bg-brand-teal"
+            className="h-full bg-brand-lime"
             initial={{ width: 0 }}
             animate={{
               width: `${((currentStep + 1) / CALCULATOR_STEPS.length) * 100}%`,
@@ -45,7 +45,7 @@ export function StepIndicator({ currentStep, className }: StepIndicatorProps) {
                   className={cn(
                     'flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors',
                     isCompleted &&
-                      'border-brand-teal bg-brand-teal text-white',
+                      'border-brand-lime bg-brand-lime text-brand-navy',
                     isCurrent &&
                       'border-brand-navy bg-brand-navy text-white',
                     isUpcoming && 'border-gray-200 bg-white text-gray-400'
@@ -95,7 +95,7 @@ export function StepIndicator({ currentStep, className }: StepIndicatorProps) {
               {index < CALCULATOR_STEPS.length - 1 && (
                 <div className="mx-2 h-0.5 flex-1 bg-gray-100 md:mx-4">
                   <motion.div
-                    className="h-full bg-brand-teal"
+                    className="h-full bg-brand-lime"
                     initial={{ width: 0 }}
                     animate={{ width: isCompleted ? '100%' : '0%' }}
                     transition={{ duration: 0.3 }}
