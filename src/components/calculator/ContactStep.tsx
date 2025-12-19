@@ -50,20 +50,33 @@ export function ContactStep() {
     setIsSubmitting(true);
 
     try {
-      // Submit to HubSpot Forms API
+      // Submit to HubSpot Forms API with all properties
       const response = await fetch('/api/hubspot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // Contact Info
           firstName: contactInfo.firstName,
           lastName: contactInfo.lastName,
           email: contactInfo.email,
           phone: contactInfo.phone,
+          jobTitle: contactInfo.jobTitle,
           company: branchData.institutionName,
+
+          // Branch Information
           branchName: branchData.branchName,
-          monthlyTransactions: branchData.monthlyTransactions,
-          currentFTEs: branchData.currentFTEs,
+          monthlyTransactions: branchData.monthlyTransactions || 0,
+          currentFTEs: branchData.currentFTEs || 0,
+          annualFTECost: branchData.annualFTECost || 42000,
+
+          // ROI Results
           estimatedROI: results?.calculation.netAnnualROI || 0,
+          fiveYearROI: results?.calculation.fiveYearROI || 0,
+          fteSavings: results?.calculation.fteSavings || 0,
+          paybackPeriodMonths: results?.calculation.paybackPeriodMonths || 0,
+          hasPositiveROI: results?.calculation.hasPositiveROI || false,
+
+          // Pain Points
           painPoints: branchData.painPoints || [],
         }),
       });

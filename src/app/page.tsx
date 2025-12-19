@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui';
 import { trackEvent } from '@/lib/utils';
+import { QDS_LOGO_URL } from '@/lib/constants';
 
 export default function HomePage() {
   const handleStartClick = () => {
@@ -18,11 +19,12 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <Image
-              src="/qds-logo.svg"
+              src={QDS_LOGO_URL}
               alt="QDS Logo"
               width={40}
               height={40}
               className="rounded-lg"
+              unoptimized
             />
             <div>
               <p className="text-sm font-bold text-brand-navy">
@@ -158,11 +160,12 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
               <Image
-                src="/qds-logo.svg"
+                src={QDS_LOGO_URL}
                 alt="QDS Logo"
                 width={32}
                 height={32}
                 className="rounded"
+                unoptimized
               />
               <span className="text-sm font-semibold text-gray-700">
                 Quality Data Systems

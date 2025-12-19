@@ -85,10 +85,10 @@ export const branchDataSchema = z.object({
 });
 
 /**
- * Send Report API Schema
+ * Send Report API Schema (supports multiple emails)
  */
 export const sendReportSchema = z.object({
-  email: z.string().email(),
+  emails: z.array(z.string().email()).min(1, 'At least one email required'),
   results: z.object({
     branchData: branchDataSchema,
     calculation: z.object({
@@ -107,21 +107,36 @@ export const sendReportSchema = z.object({
     timestamp: z.string().or(z.date()),
   }),
   contactInfo: contactSchema,
+  painPoints: z.array(z.string()).optional(),
 });
 
 /**
  * HubSpot Form Submission Schema
+ * Includes all branch info, ROI results, and pain points
  */
 export const hubspotSubmissionSchema = z.object({
+  // Contact Info
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
   phone: z.string().optional(),
+  jobTitle: z.string().optional(),
   company: z.string(),
+
+  // Branch Information
   branchName: z.string(),
   monthlyTransactions: z.number(),
   currentFTEs: z.number(),
+  annualFTECost: z.number(),
+
+  // ROI Results
   estimatedROI: z.number(),
+  fiveYearROI: z.number(),
+  fteSavings: z.number(),
+  paybackPeriodMonths: z.number(),
+  hasPositiveROI: z.boolean(),
+
+  // Pain Points
   painPoints: z.array(z.string()),
 });
 
