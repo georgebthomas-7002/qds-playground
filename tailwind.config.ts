@@ -18,6 +18,7 @@ const config: Config = {
           'teal-dark': '#0f766e',
           blue: '#3b82f6',
           'blue-light': '#60a5fa',
+          'sky': '#a5d7f1',
         },
       },
       fontFamily: {
