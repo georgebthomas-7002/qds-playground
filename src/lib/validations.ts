@@ -9,6 +9,11 @@ export const institutionSchema = z.object({
     .string()
     .min(1, VALIDATION_MESSAGES.required)
     .max(100, 'Institution name is too long'),
+  institutionWebsite: z
+    .string()
+    .url('Please enter a valid website URL')
+    .optional()
+    .or(z.literal('')),
 });
 
 /**
@@ -77,6 +82,7 @@ export const contactSchema = z.object({
  */
 export const branchDataSchema = z.object({
   institutionName: z.string().min(1),
+  institutionWebsite: z.string().optional(),
   branchName: z.string().min(1),
   monthlyTransactions: z.number().positive(),
   currentFTEs: z.number().positive(),
@@ -124,6 +130,7 @@ export const hubspotSubmissionSchema = z.object({
 
   // Institution & Branch Information
   institutionName: z.string(), // Maps to custom 'institution_name' property
+  institutionWebsite: z.string().optional(), // Maps to 'website' for company association
   branchName: z.string(), // Maps to HubSpot standard 'company' field
   monthlyTransactions: z.number(),
   currentFTEs: z.number(),

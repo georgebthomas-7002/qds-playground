@@ -519,11 +519,11 @@ function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['resul
         )
       ),
 
-      // Continue Your Journey - Resources
+      // Continue Your Journey - Resources (show all 6)
       React.createElement(View, { style: styles.section },
         React.createElement(Text, { style: styles.sectionTitle }, 'Continue Your Journey'),
         React.createElement(View, { style: styles.resourcesGrid },
-          ...QDS_RESOURCES.slice(0, 4).map((resource, index) =>
+          ...QDS_RESOURCES.map((resource, index) =>
             React.createElement(View, { key: index, style: styles.resourceCard },
               React.createElement(Text, { style: styles.resourceType },
                 resource.type === 'guide' ? 'Ultimate Guide' : resource.type === 'product' ? 'Product Info' : 'Blog Article'

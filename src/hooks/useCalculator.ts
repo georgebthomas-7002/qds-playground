@@ -55,6 +55,7 @@ const STEP_ORDER: CalculatorStep[] = [
 
 const initialBranchData: Partial<BranchData> = {
   institutionName: '',
+  institutionWebsite: '',
   branchName: '',
   monthlyTransactions: undefined,
   currentFTEs: undefined,

@@ -64,6 +64,7 @@ export function ContactStep() {
 
           // Institution & Branch Information
           institutionName: branchData.institutionName || 'Unknown Institution',
+          institutionWebsite: branchData.institutionWebsite || '', // For HubSpot company association
           branchName: branchData.branchName || 'Unknown Branch',
           monthlyTransactions: branchData.monthlyTransactions || 0,
           currentFTEs: branchData.currentFTEs || 0,
