@@ -103,10 +103,10 @@ export async function POST(request: NextRequest) {
       { name: 'pain_point_count', value: data.painPoints.length.toString() },
     ];
 
-    // Add website field if provided - this helps HubSpot with company association
-    // The 'website' field is a standard Company property that HubSpot uses for matching
+    // Add domain field if provided - this helps HubSpot with company association
+    // The 'domain' field is HubSpot's Company Domain property used for matching/association
     if (data.institutionWebsite) {
-      fields.push({ name: 'website', value: data.institutionWebsite });
+      fields.push({ name: 'domain', value: data.institutionWebsite });
     }
 
     const hubspotPayload = {
@@ -149,9 +149,9 @@ export async function POST(request: NextRequest) {
         { name: 'message', value: roiSummary },
       ];
 
-      // Include website in fallback if provided
+      // Include domain in fallback if provided
       if (data.institutionWebsite) {
-        fallbackFields.push({ name: 'website', value: data.institutionWebsite });
+        fallbackFields.push({ name: 'domain', value: data.institutionWebsite });
       }
 
       const fallbackPayload = {

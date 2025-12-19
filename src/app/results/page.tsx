@@ -119,39 +119,39 @@ export default function ResultsPage() {
       });
 
       if (!response.ok) {
+        // Try to get error details from response
+        const contentType = response.headers.get('content-type');
+        if (contentType?.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate PDF');
+        }
         throw new Error('Failed to generate PDF');
       }
 
-      // Check if this was a HubSpot upload response (JSON) or PDF download (blob)
-      const contentType = response.headers.get('content-type');
+      // API always returns PDF binary now (HubSpot attachment happens server-side)
+      const blob = await response.blob();
 
-      if (contentType?.includes('application/json')) {
-        // HubSpot upload response
-        const data = await response.json();
-        if (data.success) {
-          setHubSpotStatus('success');
-          // Also download the PDF
-          await handleDownloadPDF(false);
-        }
-      } else {
-        // Direct PDF download
-        const blob = await response.blob();
-        const institutionName = results.branchData?.institutionName || 'Report';
-        const filename = `TCR-ROI-Report-${institutionName.replace(/\s+/g, '-')}.pdf`;
-
-        // Create download link
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-
-        setPdfDownloaded(true);
-        trackEvent('pdf_downloaded');
+      // Verify we got a PDF
+      if (blob.type !== 'application/pdf' && blob.size === 0) {
+        throw new Error('Invalid PDF response');
       }
+
+      const institutionName = results.branchData?.institutionName || 'Report';
+      const filename = `TCR-ROI-Report-${institutionName.replace(/\s+/g, '-')}.pdf`;
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      setPdfDownloaded(true);
+      setHubSpotStatus('success');
+      trackEvent('pdf_downloaded');
     } catch (error) {
       console.error('PDF generation error:', error);
       setPdfError('Failed to generate PDF. Please try again.');

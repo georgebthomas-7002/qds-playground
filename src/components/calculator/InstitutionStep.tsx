@@ -71,17 +71,20 @@ export function InstitutionStep() {
           />
 
           <Input
-            label="Institution Website"
+            label="Institution Domain"
             name="institutionWebsite"
-            type="url"
-            placeholder="e.g., https://www.firstnationalbank.com"
+            type="text"
+            placeholder="e.g., firstnationalbank.com"
             value={branchData.institutionWebsite || ''}
             onChange={(e) => {
-              updateBranchData({ institutionWebsite: e.target.value });
+              // Strip protocol and www if user pastes a full URL
+              let domain = e.target.value.toLowerCase().trim();
+              domain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+              updateBranchData({ institutionWebsite: domain });
               setErrors((prev) => ({ ...prev, institutionWebsite: undefined }));
             }}
             error={errors.institutionWebsite}
-            hint="Optional - helps us better identify your institution"
+            hint="Optional - your institution's domain (e.g., firstnationalbank.com)"
           />
 
           <div className="mt-8 flex justify-end">

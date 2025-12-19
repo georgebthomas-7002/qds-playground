@@ -561,7 +561,7 @@ function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['resul
 export async function POST(request: NextRequest) {
   try {
     const body: PDFRequestBody = await request.json();
-    const { results, contactInfo, uploadToHubSpot, hubSpotContactId } = body;
+    const { results, contactInfo, uploadToHubSpot } = body;
 
     // Validate we have required data
     if (!results || !results.branchData || !results.calculation) {
@@ -588,38 +588,44 @@ export async function POST(request: NextRequest) {
 
     console.log('PDF generated successfully, size:', pdfBuffer.length);
 
-    // If HubSpot upload is requested
-    if (uploadToHubSpot && process.env.HUBSPOT_ACCESS_TOKEN) {
+    // If HubSpot upload is requested and we have an access token
+    // Do this BEFORE returning the PDF so it's attached to the contact
+    if (uploadToHubSpot && process.env.HUBSPOT_ACCESS_TOKEN && contactInfo.email) {
       try {
-        // Upload file to HubSpot
-        const fileUploadResult = await uploadToHubSpotFiles(
-          pdfBuffer,
-          safeFilename,
-          contactInfo.email
-        );
+        console.log('Starting HubSpot PDF attachment for:', contactInfo.email);
 
-        // If we have a contact ID, create a note with the attachment
-        if (hubSpotContactId && fileUploadResult.id) {
+        // Step 1: Look up the contact by email to get their ID
+        const contactId = await findHubSpotContactByEmail(contactInfo.email);
+
+        if (contactId) {
+          console.log('Found HubSpot contact ID:', contactId);
+
+          // Step 2: Upload file to HubSpot Files
+          const fileUploadResult = await uploadToHubSpotFiles(
+            pdfBuffer,
+            safeFilename,
+            contactInfo.email
+          );
+          console.log('File uploaded to HubSpot, file ID:', fileUploadResult.id);
+
+          // Step 3: Create a note with the PDF attached to the contact
           await createHubSpotNoteWithAttachment(
-            hubSpotContactId,
+            contactId,
             fileUploadResult.id,
             results,
             contactInfo
           );
+          console.log('PDF attached to contact successfully');
+        } else {
+          console.log('Contact not found in HubSpot yet (may still be processing)');
         }
-
-        return NextResponse.json({
-          success: true,
-          message: 'PDF generated and uploaded to HubSpot',
-          hubSpotFileId: fileUploadResult.id,
-        });
       } catch (hubspotError) {
-        console.error('HubSpot upload error:', hubspotError);
-        // Still return the PDF even if HubSpot upload fails
+        // Log but don't fail - still return the PDF
+        console.error('HubSpot PDF attachment error:', hubspotError);
       }
     }
 
-    // Return PDF as download
+    // ALWAYS return PDF as download (never return JSON for successful PDF generation)
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
@@ -638,6 +644,60 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+  }
+}
+
+// Find a HubSpot contact by email and return their ID
+async function findHubSpotContactByEmail(email: string): Promise<string | null> {
+  const accessToken = process.env.HUBSPOT_ACCESS_TOKEN;
+  if (!accessToken) {
+    throw new Error('HubSpot access token not configured');
+  }
+
+  try {
+    // Use HubSpot CRM API to search for contact by email
+    const response = await fetch(
+      `https://api.hubapi.com/crm/v3/objects/contacts/search`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filterGroups: [
+            {
+              filters: [
+                {
+                  propertyName: 'email',
+                  operator: 'EQ',
+                  value: email,
+                },
+              ],
+            },
+          ],
+          properties: ['email', 'firstname', 'lastname'],
+          limit: 1,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('HubSpot contact search error:', error);
+      return null;
+    }
+
+    const result = await response.json();
+
+    if (result.results && result.results.length > 0) {
+      return result.results[0].id;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error searching for HubSpot contact:', error);
+    return null;
   }
 }
 

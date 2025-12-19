@@ -11,7 +11,9 @@ export const institutionSchema = z.object({
     .max(100, 'Institution name is too long'),
   institutionWebsite: z
     .string()
-    .url('Please enter a valid website URL')
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})?$/, {
+      message: 'Please enter a valid domain (e.g., firstnationalbank.com)',
+    })
     .optional()
     .or(z.literal('')),
 });
