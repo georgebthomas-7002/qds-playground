@@ -152,7 +152,7 @@ async function findContactByEmail(email: string, accessToken: string): Promise<s
   }
 }
 
-// Helper: Associate a contact with a company
+// Helper: Associate a contact with a company using v4 API
 async function associateContactWithCompany(
   contactId: string,
   companyId: string,
@@ -160,8 +160,18 @@ async function associateContactWithCompany(
 ): Promise<boolean> {
   console.log('[associateContactWithCompany] Associating contact:', contactId, 'with company:', companyId);
 
-  const url = `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}/associations/companies/${companyId}/contact_to_company`;
+  // Use HubSpot v4 Associations API - more reliable
+  const url = `https://api.hubapi.com/crm/v4/objects/contacts/${contactId}/associations/companies/${companyId}`;
   console.log('[associateContactWithCompany] URL:', url);
+
+  // Association type for Contact to Company
+  const requestBody = [
+    {
+      associationCategory: 'HUBSPOT_DEFINED',
+      associationTypeId: 1  // 1 = Contact to Company (Primary)
+    }
+  ];
+  console.log('[associateContactWithCompany] Request body:', JSON.stringify(requestBody));
 
   try {
     const response = await fetch(url, {
@@ -170,6 +180,7 @@ async function associateContactWithCompany(
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify(requestBody),
     });
 
     const responseText = await response.text();
