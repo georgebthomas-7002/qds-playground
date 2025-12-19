@@ -190,6 +190,62 @@ export const QDS_LOGO_URL =
 export const QDS_CONTACT_URL = 'https://www.qualitydatasystems.com/contact-us';
 
 // ============================================
+// LEARNING RESOURCES
+// ============================================
+
+export interface QDSResource {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  type: 'guide' | 'product' | 'blog';
+  cta: string;
+}
+
+export const QDS_RESOURCES: QDSResource[] = [
+  {
+    id: 'tcr-products',
+    title: 'Modern Teller Cash Recyclers',
+    description: 'Explore the latest TCR technology built to fit your branch environment. See how cassette-based units deliver faster processing and larger capacity.',
+    url: 'https://www.qualitydatasystems.com/teller-cash-recyclers',
+    type: 'product',
+    cta: 'View TCR Solutions',
+  },
+  {
+    id: 'tcr-ultimate-guide',
+    title: 'The TCR Ultimate Guide',
+    description: 'Everything you need to know about teller cash recyclers—from ROI calculations to integration options and choosing the right model for your branch.',
+    url: 'https://www.qualitydatasystems.com/tcr-ultimate-guide',
+    type: 'guide',
+    cta: 'Read the Guide',
+  },
+  {
+    id: 'roi-calculation',
+    title: 'How to Calculate ROI for a TCR',
+    description: 'Step-by-step breakdown of TCR ROI with real examples. Learn why annual operating cost matters more than upfront capital investment.',
+    url: 'https://blog.qualitydatasystems.com/how-to-calculate-roi-for-a-tcr-steps-examples',
+    type: 'blog',
+    cta: 'See the Math',
+  },
+  {
+    id: 'real-savings',
+    title: 'TCR ROI: How Much You\'ll Really Save',
+    description: 'Real-world savings examples from financial institutions. Discover where the biggest savings come from—hint: it\'s not just labor costs.',
+    url: 'https://blog.qualitydatasystems.com/teller-cash-recycler-roi-how-much-youll-really-save-and-where-examples',
+    type: 'blog',
+    cta: 'See Real Examples',
+  },
+  {
+    id: 'staff-resistance',
+    title: 'Overcoming Staff Resistance to TCRs',
+    description: 'Your playbook for getting team buy-in. Learn how to address concerns, provide effective training, and help staff feel confident—not confused.',
+    url: 'https://blog.qualitydatasystems.com/teller-cash-recycler-tcr-machines-your-playbook-for-overcoming-staff-resistance',
+    type: 'blog',
+    cta: 'Get the Playbook',
+  },
+];
+
+// ============================================
 // ANALYTICS
 // ============================================
 

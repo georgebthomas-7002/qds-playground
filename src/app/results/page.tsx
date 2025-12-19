@@ -14,6 +14,7 @@ import {
   NoSavingsCard,
   CalculationBreakdown,
   PainPointSolutions,
+  ContinueYourJourney,
 } from '@/components/results';
 import { formatCurrency, formatFTE, formatNumber } from '@/lib/calculations';
 import { trackEvent } from '@/lib/utils';
@@ -398,6 +399,9 @@ export default function ResultsPage() {
             </div>
           </Card>
         )}
+
+        {/* Continue Your Journey - Learning Resources */}
+        <ContinueYourJourney />
 
         {/* Ready to Start a Conversation CTA */}
         <motion.div

@@ -16,6 +16,7 @@ import {
   PAIN_POINTS,
   PAIN_POINT_SOLUTIONS,
   QDS_CONTACT_URL,
+  QDS_RESOURCES,
 } from '@/lib/constants';
 
 // QDS Brand Colors
@@ -265,6 +266,45 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: colors.black,
   },
+  // Resources section
+  resourcesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+  },
+  resourceCard: {
+    width: '48%',
+    marginBottom: 8,
+    marginRight: '2%',
+    padding: 10,
+    backgroundColor: colors.lightGray,
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.lime,
+  },
+  resourceType: {
+    fontSize: 6,
+    color: colors.teal,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 3,
+  },
+  resourceTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: colors.navy,
+    marginBottom: 4,
+  },
+  resourceDesc: {
+    fontSize: 7,
+    color: colors.gray,
+    marginBottom: 4,
+    lineHeight: 1.3,
+  },
+  resourceUrl: {
+    fontSize: 6,
+    color: colors.teal,
+  },
 });
 
 // Types for the API
@@ -446,6 +486,23 @@ function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['resul
           React.createElement(View, { style: styles.whyQdsItem },
             React.createElement(Text, { style: styles.whyQdsBullet }, '✓'),
             React.createElement(Text, { style: styles.whyQdsText }, 'Partnership with leading TCR manufacturers for best-in-class equipment')
+          )
+        )
+      ),
+
+      // Continue Your Journey - Resources
+      React.createElement(View, { style: styles.section },
+        React.createElement(Text, { style: styles.sectionTitle }, 'Continue Your Journey'),
+        React.createElement(View, { style: styles.resourcesGrid },
+          ...QDS_RESOURCES.slice(0, 4).map((resource, index) =>
+            React.createElement(View, { key: index, style: styles.resourceCard },
+              React.createElement(Text, { style: styles.resourceType },
+                resource.type === 'guide' ? 'Ultimate Guide' : resource.type === 'product' ? 'Product Info' : 'Blog Article'
+              ),
+              React.createElement(Text, { style: styles.resourceTitle }, resource.title),
+              React.createElement(Text, { style: styles.resourceDesc }, resource.description),
+              React.createElement(Text, { style: styles.resourceUrl }, resource.url)
+            )
           )
         )
       ),
