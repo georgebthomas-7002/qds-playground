@@ -295,11 +295,10 @@ export async function POST(request: NextRequest) {
       { name: 'pain_point_count', value: data.painPoints.length.toString() },
     ];
 
-    // Add domain field if provided - this helps HubSpot with company association
-    // The 'domain' field is HubSpot's Company Domain property used for matching/association
-    if (data.institutionWebsite) {
-      fields.push({ name: 'domain', value: data.institutionWebsite });
-    }
+    // NOTE: We do NOT send 'domain' to the Forms API because:
+    // - 'domain' is a Company property, not a Contact property
+    // - The Forms API only handles Contact fields
+    // - Company creation/association is handled separately via CRM API after form submission
 
     const hubspotPayload = {
       fields,
@@ -341,11 +340,6 @@ export async function POST(request: NextRequest) {
         { name: 'message', value: roiSummary },
       ];
 
-      // Include domain in fallback if provided
-      if (data.institutionWebsite) {
-        fallbackFields.push({ name: 'domain', value: data.institutionWebsite });
-      }
-
       const fallbackPayload = {
         fields: fallbackFields,
         context: hubspotPayload.context,
@@ -378,18 +372,29 @@ export async function POST(request: NextRequest) {
     console.log('HubSpot submission successful:', hubspotResult);
 
     // If we have a domain and access token, create/find company and associate with contact
-    // Do this in the background (don't await) to not slow down the response
+    // IMPORTANT: We MUST await this because Vercel serverless terminates after returning response
     const accessToken = process.env.HUBSPOT_ACCESS_TOKEN;
     if (data.institutionWebsite && accessToken) {
-      // Run company association in background - don't block the response
-      ensureCompanyAssociation(
-        data.email,
-        data.institutionWebsite,
-        data.institutionName, // Use institution name as company name
-        accessToken
-      ).catch((err) => {
-        console.error('Background company association error:', err);
-      });
+      console.log('Starting company creation/association for:', data.institutionWebsite);
+      try {
+        await ensureCompanyAssociation(
+          data.email,
+          data.institutionWebsite,
+          data.institutionName, // Use institution name as company name
+          accessToken
+        );
+        console.log('Company association completed successfully');
+      } catch (err) {
+        console.error('Company association error:', err);
+        // Don't fail the whole request if company association fails
+      }
+    } else {
+      if (!data.institutionWebsite) {
+        console.log('No institution domain provided, skipping company association');
+      }
+      if (!accessToken) {
+        console.log('No HUBSPOT_ACCESS_TOKEN configured, skipping company association');
+      }
     }
 
     return NextResponse.json({
