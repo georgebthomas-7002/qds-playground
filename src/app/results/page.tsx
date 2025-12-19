@@ -153,9 +153,16 @@ export default function ResultsPage() {
             </div>
           </Link>
 
-          <Button variant="outline" size="sm" onClick={handleNewCalculation}>
-            New Calculation
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={handleNewCalculation}>
+              New Calculation
+            </Button>
+            <a href={QDS_CONTACT_URL} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" className="bg-brand-lime text-brand-navy hover:bg-brand-lime/90">
+                Start a Conversation
+              </Button>
+            </a>
+          </div>
         </div>
       </header>
 

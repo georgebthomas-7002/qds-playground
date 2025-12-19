@@ -12,7 +12,8 @@ import {
   PainPointsStep,
   ContactStep,
 } from '@/components/calculator';
-import { CALCULATOR_STEPS, QDS_LOGO_URL } from '@/lib/constants';
+import { CALCULATOR_STEPS, QDS_LOGO_URL, QDS_CONTACT_URL } from '@/lib/constants';
+import { Button } from '@/components/ui';
 import { trackEvent } from '@/lib/utils';
 
 export default function CalculatorPage() {
@@ -69,15 +70,22 @@ export default function CalculatorPage() {
             </div>
           </Link>
 
-          <button
-            onClick={() => {
-              reset();
-              trackEvent('calculator_reset');
-            }}
-            className="text-sm text-gray-500 transition-colors hover:text-gray-700"
-          >
-            Start Over
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                reset();
+                trackEvent('calculator_reset');
+              }}
+              className="text-sm text-gray-500 transition-colors hover:text-gray-700"
+            >
+              Start Over
+            </button>
+            <a href={QDS_CONTACT_URL} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" className="bg-brand-lime text-brand-navy hover:bg-brand-lime/90">
+                Start a Conversation
+              </Button>
+            </a>
+          </div>
         </div>
       </header>
 

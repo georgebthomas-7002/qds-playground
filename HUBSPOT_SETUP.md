@@ -17,13 +17,22 @@ You already have these credentials:
 - **Portal ID**: `360991`
 - **Form GUID**: `b137e6ef-6681-46e6-acd4-b421bb0c28fe`
 
+### Field Mapping
+
+The calculator maps fields to HubSpot as follows:
+
+| Calculator Field | HubSpot Field | Notes |
+|-----------------|---------------|-------|
+| **Branch Name** | `company` | Uses HubSpot's standard Company Name field |
+| **Institution Name** | `institution_name` | Custom property (see below) |
+
 ### Custom Properties to Create
 
 In HubSpot, go to **Settings → Properties → Contact Properties** and create these:
 
 | Property Name | Label | Type |
 |--------------|-------|------|
-| `branch_name` | Branch Name | Single-line text |
+| `institution_name` | Institution Name | Single-line text |
 | `monthly_transactions` | Monthly Transactions | Number |
 | `current_ftes` | Current FTEs | Number |
 | `annual_fte_cost` | Annual FTE Cost | Number |
