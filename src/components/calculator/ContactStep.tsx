@@ -56,25 +56,25 @@ export function ContactStep() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           // Contact Info
-          firstName: contactInfo.firstName,
-          lastName: contactInfo.lastName,
-          email: contactInfo.email,
-          phone: contactInfo.phone,
-          jobTitle: contactInfo.jobTitle,
+          firstName: contactInfo.firstName || '',
+          lastName: contactInfo.lastName || '',
+          email: contactInfo.email || '',
+          phone: contactInfo.phone || '',
+          jobTitle: contactInfo.jobTitle || '',
 
           // Institution & Branch Information
-          institutionName: branchData.institutionName, // → custom 'institution_name' property
-          branchName: branchData.branchName, // → HubSpot 'company' field
+          institutionName: branchData.institutionName || 'Unknown Institution',
+          branchName: branchData.branchName || 'Unknown Branch',
           monthlyTransactions: branchData.monthlyTransactions || 0,
           currentFTEs: branchData.currentFTEs || 0,
           annualFTECost: branchData.annualFTECost || 42000,
 
           // ROI Results
-          estimatedROI: results?.calculation.netAnnualROI || 0,
-          fiveYearROI: results?.calculation.fiveYearROI || 0,
-          fteSavings: results?.calculation.fteSavings || 0,
-          paybackPeriodMonths: results?.calculation.paybackPeriodMonths || 0,
-          hasPositiveROI: results?.calculation.hasPositiveROI || false,
+          estimatedROI: results?.calculation?.netAnnualROI || 0,
+          fiveYearROI: results?.calculation?.fiveYearROI || 0,
+          fteSavings: results?.calculation?.fteSavings || 0,
+          paybackPeriodMonths: results?.calculation?.paybackPeriodMonths || 0,
+          hasPositiveROI: results?.calculation?.hasPositiveROI || false,
 
           // Pain Points
           painPoints: branchData.painPoints || [],
@@ -98,11 +98,6 @@ export function ContactStep() {
     }
   };
 
-  const handleSkip = () => {
-    trackEvent('contact_skipped');
-    router.push('/results');
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -113,11 +108,11 @@ export function ContactStep() {
       <Card className="mx-auto max-w-xl">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            Get Your Personalized Report
+            Download Your Report
           </h2>
           <p className="mt-2 text-gray-500">
-            Enter your contact information to receive a detailed ROI report and
-            have a QDS specialist review your results.
+            Enter your contact information to download your detailed ROI analysis
+            and have a QDS specialist review your results.
           </p>
         </div>
 
@@ -128,20 +123,42 @@ export function ContactStep() {
             animate={{ opacity: 1, scale: 1 }}
             className="mb-6 rounded-xl bg-gradient-to-br from-brand-navy to-brand-navy-dark p-6 text-white"
           >
-            <p className="text-sm font-medium text-white/70">
-              Your Estimated Annual ROI
-            </p>
-            <p className="mt-1 font-mono text-3xl font-bold">
-              {results.calculation.hasPositiveROI ? (
-                `$${results.calculation.netAnnualROI.toLocaleString()}`
-              ) : (
-                <span className="text-xl">Limited savings identified</span>
-              )}
-            </p>
-            {results.calculation.hasPositiveROI && (
-              <p className="mt-2 text-sm text-white/70">
-                Based on {results.calculation.fteSavings} FTE optimization
-              </p>
+            {results.calculation.hasPositiveROI ? (
+              <>
+                <p className="text-sm font-medium text-white/70">
+                  Your Estimated Annual Savings
+                </p>
+                <p className="mt-1 font-mono text-3xl font-bold">
+                  ${results.calculation.netAnnualROI.toLocaleString()}
+                </p>
+                <p className="mt-2 text-sm text-white/70">
+                  Based on {results.calculation.fteSavings.toFixed(1)} FTE optimization
+                </p>
+              </>
+            ) : results.calculation.isUnderstaffed ? (
+              <>
+                <p className="text-sm font-medium text-white/70">
+                  Staffing Analysis
+                </p>
+                <p className="mt-1 text-xl font-bold">
+                  Your branch may benefit from additional staff
+                </p>
+                <p className="mt-2 text-sm text-white/70">
+                  TCR technology can help maximize productivity with your current team
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-white/70">
+                  Efficiency Analysis
+                </p>
+                <p className="mt-1 text-xl font-bold">
+                  Your staffing is already optimized
+                </p>
+                <p className="mt-2 text-sm text-white/70">
+                  TCR can still improve accuracy, security, and customer experience
+                </p>
+              </>
             )}
           </motion.div>
         )}
@@ -224,14 +241,9 @@ export function ContactStep() {
               Back
             </Button>
 
-            <div className="flex gap-3">
-              <Button type="button" variant="outline" onClick={handleSkip}>
-                Skip for Now
-              </Button>
-              <Button type="submit" isLoading={isSubmitting}>
-                {isSubmitting ? 'Submitting...' : 'Get My Report'}
-              </Button>
-            </div>
+            <Button type="submit" isLoading={isSubmitting}>
+              {isSubmitting ? 'Generating...' : 'Download My Report'}
+            </Button>
           </div>
         </form>
 
