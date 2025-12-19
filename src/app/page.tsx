@@ -66,15 +66,12 @@ export default function HomePage() {
               analysis in under 2 minutes.
             </p>
 
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <div className="mt-10">
               <Link href="/calculator" onClick={handleStartClick}>
                 <Button size="lg" rightIcon={<ArrowRightIcon />}>
                   Calculate My ROI
                 </Button>
               </Link>
-              <p className="text-sm text-gray-500">
-                No credit card required. Results shown immediately.
-              </p>
             </div>
           </motion.div>
         </div>
@@ -97,7 +94,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-20 grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -105,10 +102,13 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                className="relative rounded-xl border border-gray-100 bg-white px-6 pb-6 pt-10 shadow-sm transition-shadow hover:shadow-md text-center"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-teal/10">
-                  <feature.icon className="h-6 w-6 text-brand-teal" />
+                {/* Icon positioned 50% above card */}
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-navy shadow-lg">
+                    <feature.icon className="h-7 w-7 text-brand-sky" />
+                  </div>
                 </div>
                 <h3 className="mt-4 text-lg font-bold text-gray-900">
                   {feature.title}
