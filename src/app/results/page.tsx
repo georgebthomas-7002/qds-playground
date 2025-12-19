@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useCalculator } from '@/hooks/useCalculator';
@@ -90,18 +91,13 @@ export default function ResultsPage() {
             href="/"
             className="flex items-center gap-3 transition-opacity hover:opacity-80"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-navy">
-              <svg
-                className="h-6 w-6 text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-              </svg>
-            </div>
+            <Image
+              src="/qds-logo.svg"
+              alt="QDS Logo"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
             <div>
               <p className="text-sm font-bold text-brand-navy">
                 Quality Data Systems
