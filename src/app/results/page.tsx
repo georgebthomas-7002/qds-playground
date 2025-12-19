@@ -17,16 +17,15 @@ import {
 import { formatCurrency, formatFTE, formatNumber } from '@/lib/calculations';
 import { trackEvent } from '@/lib/utils';
 import { QDS_LOGO_URL, QDS_CONTACT_URL } from '@/lib/constants';
+import { generatePDFReport, downloadPDF } from '@/components/results/PDFReport';
 
 export default function ResultsPage() {
   const router = useRouter();
   const { results, branchData, contactInfo, markResultsViewed, reset } =
     useCalculator();
-  const [emailSending, setEmailSending] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [teamEmails, setTeamEmails] = useState('');
-  const [sendToSelf, setSendToSelf] = useState(true);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [pdfDownloaded, setPdfDownloaded] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   // Mark results as viewed
   useEffect(() => {
@@ -50,54 +49,23 @@ export default function ResultsPage() {
 
   const { calculation } = results;
 
-  const handleSendResults = async () => {
-    const emails: string[] = [];
+  const handleDownloadPDF = async () => {
+    if (!results) return;
 
-    // Add user's email if sending to self
-    if (sendToSelf && contactInfo.email) {
-      emails.push(contactInfo.email);
-    }
-
-    // Parse and add team emails
-    if (teamEmails.trim()) {
-      const additionalEmails = teamEmails
-        .split(/[,;\s]+/)
-        .map(e => e.trim())
-        .filter(e => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
-      emails.push(...additionalEmails);
-    }
-
-    if (emails.length === 0) {
-      setEmailError('Please add at least one email address');
-      return;
-    }
-
-    setEmailSending(true);
-    setEmailError(null);
+    setPdfGenerating(true);
+    setPdfError(null);
 
     try {
-      const response = await fetch('/api/send-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          emails,
-          results,
-          contactInfo,
-          branchData: results.branchData,
-          painPoints: results.branchData.painPoints,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send email');
-      }
-
-      setEmailSent(true);
-      trackEvent('email_submitted', { emailCount: emails.length });
+      const blob = await generatePDFReport(results, contactInfo);
+      const filename = `TCR-ROI-Report-${results.branchData.institutionName.replace(/\s+/g, '-')}.pdf`;
+      downloadPDF(blob, filename);
+      setPdfDownloaded(true);
+      trackEvent('pdf_downloaded');
     } catch (error) {
-      setEmailError('Failed to send email. Please try again.');
+      console.error('PDF generation error:', error);
+      setPdfError('Failed to generate PDF. Please try again.');
     } finally {
-      setEmailSending(false);
+      setPdfGenerating(false);
     }
   };
 
@@ -258,77 +226,43 @@ export default function ResultsPage() {
           </div>
         </Card>
 
-        {/* Share Results CTA */}
-        {!emailSent ? (
-          <Card className="mb-8 border-brand-teal/20 bg-brand-teal/5">
-            <div className="space-y-4">
+        {/* Download PDF CTA */}
+        {!pdfDownloaded ? (
+          <Card className="mb-8 border-brand-sky/30 bg-brand-sky/10">
+            <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-teal/20">
-                  <svg className="h-5 w-5 text-brand-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-navy">
+                  <svg className="h-5 w-5 text-brand-sky" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Share This Report
+                    Download Your Report
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Send these results to yourself or share with your team
+                    Get a PDF copy to share with your team or reference later
                   </p>
                 </div>
               </div>
-
-              {/* Send to self checkbox */}
-              {contactInfo.email && (
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={sendToSelf}
-                    onChange={(e) => setSendToSelf(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-brand-teal focus:ring-brand-teal"
-                  />
-                  <span className="text-sm text-gray-700">
-                    Send to my email ({contactInfo.email})
-                  </span>
-                </label>
-              )}
-
-              {/* Team emails input */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Share with team members
-                </label>
-                <input
-                  type="text"
-                  value={teamEmails}
-                  onChange={(e) => setTeamEmails(e.target.value)}
-                  placeholder="Enter email addresses (comma separated)"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Separate multiple emails with commas
-                </p>
-              </div>
-
               <Button
-                onClick={handleSendResults}
-                isLoading={emailSending}
-                disabled={emailSending}
+                onClick={handleDownloadPDF}
+                isLoading={pdfGenerating}
+                disabled={pdfGenerating}
                 className="w-full sm:w-auto"
               >
-                {emailSending ? 'Sending...' : 'Send Report'}
+                {pdfGenerating ? 'Generating...' : 'Download PDF'}
               </Button>
-
-              {emailError && (
-                <p className="text-sm text-red-500">{emailError}</p>
-              )}
             </div>
+            {pdfError && (
+              <p className="mt-3 text-sm text-red-500">{pdfError}</p>
+            )}
           </Card>
         ) : (
-          <Card className="mb-8 border-green-200 bg-green-50">
+          <Card className="mb-8 border-brand-lime/50 bg-brand-lime/10">
             <div className="flex items-center gap-3">
               <svg
-                className="h-6 w-6 text-green-500"
+                className="h-6 w-6 text-green-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -340,12 +274,20 @@ export default function ResultsPage() {
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <div>
-                <p className="font-semibold text-green-800">Report Sent!</p>
-                <p className="text-sm text-green-600">
-                  The report has been sent to all recipients
+              <div className="flex-1">
+                <p className="font-semibold text-gray-800">Report Downloaded!</p>
+                <p className="text-sm text-gray-600">
+                  Check your downloads folder for the PDF
                 </p>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadPDF}
+                disabled={pdfGenerating}
+              >
+                Download Again
+              </Button>
             </div>
           </Card>
         )}
