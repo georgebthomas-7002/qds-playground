@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -51,6 +52,13 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-gray-50 font-sans antialiased">
         {children}
+
+        {/* HubSpot Tracking Code */}
+        <Script
+          id="hs-script-loader"
+          src="//js.hs-scripts.com/360991.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
