@@ -22,6 +22,198 @@ import { hubspotSubmissionSchema } from '@/lib/validations';
  * - payback_period_months (Number)
  * - pain_points (Multiple checkboxes or Multi-line text)
  */
+
+// Helper: Find a company by domain using HubSpot CRM API
+async function findCompanyByDomain(domain: string, accessToken: string): Promise<string | null> {
+  try {
+    const response = await fetch('https://api.hubapi.com/crm/v3/objects/companies/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filterGroups: [{
+          filters: [{
+            propertyName: 'domain',
+            operator: 'EQ',
+            value: domain,
+          }],
+        }],
+        properties: ['domain', 'name'],
+        limit: 1,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Company search error:', await response.text());
+      return null;
+    }
+
+    const result = await response.json();
+    if (result.results && result.results.length > 0) {
+      return result.results[0].id;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error searching for company:', error);
+    return null;
+  }
+}
+
+// Helper: Create a company with the given domain
+async function createCompany(domain: string, companyName: string, accessToken: string): Promise<string | null> {
+  try {
+    const response = await fetch('https://api.hubapi.com/crm/v3/objects/companies', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        properties: {
+          domain: domain,
+          name: companyName,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Company creation error:', await response.text());
+      return null;
+    }
+
+    const result = await response.json();
+    return result.id;
+  } catch (error) {
+    console.error('Error creating company:', error);
+    return null;
+  }
+}
+
+// Helper: Find a contact by email
+async function findContactByEmail(email: string, accessToken: string): Promise<string | null> {
+  try {
+    const response = await fetch('https://api.hubapi.com/crm/v3/objects/contacts/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filterGroups: [{
+          filters: [{
+            propertyName: 'email',
+            operator: 'EQ',
+            value: email,
+          }],
+        }],
+        properties: ['email'],
+        limit: 1,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Contact search error:', await response.text());
+      return null;
+    }
+
+    const result = await response.json();
+    if (result.results && result.results.length > 0) {
+      return result.results[0].id;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error searching for contact:', error);
+    return null;
+  }
+}
+
+// Helper: Associate a contact with a company
+async function associateContactWithCompany(
+  contactId: string,
+  companyId: string,
+  accessToken: string
+): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}/associations/companies/${companyId}/contact_to_company`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Association error:', await response.text());
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error associating contact with company:', error);
+    return false;
+  }
+}
+
+// Helper: Create or find company and associate with contact
+async function ensureCompanyAssociation(
+  email: string,
+  domain: string,
+  companyName: string,
+  accessToken: string
+): Promise<void> {
+  console.log('Starting company association for domain:', domain);
+
+  // Step 1: Find or create the company
+  let companyId = await findCompanyByDomain(domain, accessToken);
+
+  if (!companyId) {
+    console.log('Company not found, creating new company for domain:', domain);
+    companyId = await createCompany(domain, companyName, accessToken);
+  } else {
+    console.log('Found existing company with ID:', companyId);
+  }
+
+  if (!companyId) {
+    console.error('Failed to find or create company');
+    return;
+  }
+
+  // Step 2: Wait a moment for the contact to be created by the form submission
+  // HubSpot form submissions are async, so we may need to retry
+  let contactId: string | null = null;
+  let retries = 3;
+
+  while (!contactId && retries > 0) {
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+    contactId = await findContactByEmail(email, accessToken);
+    retries--;
+    if (!contactId && retries > 0) {
+      console.log('Contact not found yet, retrying... (' + retries + ' attempts left)');
+    }
+  }
+
+  if (!contactId) {
+    console.error('Could not find contact after form submission');
+    return;
+  }
+
+  console.log('Found contact with ID:', contactId);
+
+  // Step 3: Associate the contact with the company
+  const success = await associateContactWithCompany(contactId, companyId, accessToken);
+
+  if (success) {
+    console.log('Successfully associated contact', contactId, 'with company', companyId);
+  } else {
+    console.error('Failed to associate contact with company');
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -184,6 +376,21 @@ export async function POST(request: NextRequest) {
 
     const hubspotResult = await hubspotResponse.json();
     console.log('HubSpot submission successful:', hubspotResult);
+
+    // If we have a domain and access token, create/find company and associate with contact
+    // Do this in the background (don't await) to not slow down the response
+    const accessToken = process.env.HUBSPOT_ACCESS_TOKEN;
+    if (data.institutionWebsite && accessToken) {
+      // Run company association in background - don't block the response
+      ensureCompanyAssociation(
+        data.email,
+        data.institutionWebsite,
+        data.institutionName, // Use institution name as company name
+        accessToken
+      ).catch((err) => {
+        console.error('Background company association error:', err);
+      });
+    }
 
     return NextResponse.json({
       success: true,
