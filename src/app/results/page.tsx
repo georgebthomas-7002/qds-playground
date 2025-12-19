@@ -13,11 +13,11 @@ import {
   MetricCard,
   NoSavingsCard,
   CalculationBreakdown,
+  PainPointSolutions,
 } from '@/components/results';
 import { formatCurrency, formatFTE, formatNumber } from '@/lib/calculations';
 import { trackEvent } from '@/lib/utils';
-import { QDS_LOGO_URL, QDS_CONTACT_URL } from '@/lib/constants';
-import { generatePDFReport, downloadPDF } from '@/components/results/PDFReport';
+import { QDS_LOGO_URL, QDS_CONTACT_URL, INDUSTRY_INSIGHTS } from '@/lib/constants';
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function ResultsPage() {
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [pdfDownloaded, setPdfDownloaded] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [hubSpotStatus, setHubSpotStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
 
   // Mark results as viewed
   useEffect(() => {
@@ -49,21 +50,74 @@ export default function ResultsPage() {
 
   const { calculation } = results;
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = async (uploadToHubSpot = true) => {
     if (!results) return;
 
     setPdfGenerating(true);
     setPdfError(null);
+    if (uploadToHubSpot) {
+      setHubSpotStatus('uploading');
+    }
 
     try {
-      const blob = await generatePDFReport(results, contactInfo);
-      const filename = `TCR-ROI-Report-${results.branchData.institutionName.replace(/\s+/g, '-')}.pdf`;
-      downloadPDF(blob, filename);
-      setPdfDownloaded(true);
-      trackEvent('pdf_downloaded');
+      // Use server-side PDF generation API
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          results: {
+            branchData: results.branchData,
+            calculation: results.calculation,
+            timestamp: results.timestamp.toISOString(),
+          },
+          contactInfo: {
+            firstName: contactInfo.firstName || '',
+            lastName: contactInfo.lastName || '',
+            email: contactInfo.email || '',
+          },
+          uploadToHubSpot,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+
+      // Check if this was a HubSpot upload response (JSON) or PDF download (blob)
+      const contentType = response.headers.get('content-type');
+
+      if (contentType?.includes('application/json')) {
+        // HubSpot upload response
+        const data = await response.json();
+        if (data.success) {
+          setHubSpotStatus('success');
+          // Also download the PDF
+          await handleDownloadPDF(false);
+        }
+      } else {
+        // Direct PDF download
+        const blob = await response.blob();
+        const filename = `TCR-ROI-Report-${results.branchData.institutionName.replace(/\s+/g, '-')}.pdf`;
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        setPdfDownloaded(true);
+        trackEvent('pdf_downloaded');
+      }
     } catch (error) {
       console.error('PDF generation error:', error);
       setPdfError('Failed to generate PDF. Please try again.');
+      setHubSpotStatus('error');
     } finally {
       setPdfGenerating(false);
     }
@@ -181,6 +235,52 @@ export default function ResultsPage() {
                 branchData={results.branchData}
               />
             </div>
+
+            {/* Pain Point Solutions - How TCR Addresses Challenges */}
+            {results.branchData.painPoints && results.branchData.painPoints.length > 0 && (
+              <PainPointSolutions selectedPainPoints={results.branchData.painPoints} />
+            )}
+
+            {/* Industry Insights */}
+            <Card className="mb-8">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                Industry Benchmarks
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-lg bg-gray-50 p-3">
+                  <p className="text-2xl font-bold text-brand-navy">
+                    {INDUSTRY_INSIGHTS.branchesUsingTCR}%
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    of branches now use TCR technology
+                  </p>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-3">
+                  <p className="text-2xl font-bold text-brand-teal">
+                    {Math.round((1 - INDUSTRY_INSIGHTS.tcrTransactionTime / INDUSTRY_INSIGHTS.averageTransactionTime) * 100)}%
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    faster transaction times with TCR
+                  </p>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-3">
+                  <p className="text-2xl font-bold text-brand-lime">
+                    {INDUSTRY_INSIGHTS.tcrErrorRate}%
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    error rate (vs {INDUSTRY_INSIGHTS.averageErrorRate}% manual)
+                  </p>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-3">
+                  <p className="text-2xl font-bold text-brand-navy">
+                    +{INDUSTRY_INSIGHTS.customerSatisfactionIncrease}%
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    customer satisfaction increase
+                  </p>
+                </div>
+              </div>
+            </Card>
           </>
         ) : (
           <div className="mb-8">
@@ -246,7 +346,7 @@ export default function ResultsPage() {
                 </div>
               </div>
               <Button
-                onClick={handleDownloadPDF}
+                onClick={() => handleDownloadPDF(true)}
                 isLoading={pdfGenerating}
                 disabled={pdfGenerating}
                 className="w-full sm:w-auto"
@@ -283,7 +383,7 @@ export default function ResultsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleDownloadPDF}
+                onClick={() => handleDownloadPDF(false)}
                 disabled={pdfGenerating}
               >
                 Download Again
