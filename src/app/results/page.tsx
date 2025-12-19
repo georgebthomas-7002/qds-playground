@@ -61,25 +61,61 @@ export default function ResultsPage() {
     }
 
     try {
+      // Safely handle timestamp - could be Date object or string
+      let timestampStr: string;
+      if (results.timestamp instanceof Date) {
+        timestampStr = results.timestamp.toISOString();
+      } else if (typeof results.timestamp === 'string') {
+        timestampStr = results.timestamp;
+      } else {
+        timestampStr = new Date().toISOString();
+      }
+
+      // Build request with defensive defaults for all values
+      const requestBody = {
+        results: {
+          branchData: {
+            institutionName: results.branchData?.institutionName || 'Unknown Institution',
+            branchName: results.branchData?.branchName || 'Unknown Branch',
+            monthlyTransactions: results.branchData?.monthlyTransactions ?? 0,
+            currentFTEs: results.branchData?.currentFTEs ?? 0,
+            annualFTECost: results.branchData?.annualFTECost ?? 42000,
+            painPoints: results.branchData?.painPoints || [],
+          },
+          calculation: {
+            recommendedFTEs: results.calculation?.recommendedFTEs ?? 0,
+            fteSavings: results.calculation?.fteSavings ?? 0,
+            annualLaborSavings: results.calculation?.annualLaborSavings ?? 0,
+            annualTCRCost: results.calculation?.annualTCRCost ?? 12000,
+            netAnnualROI: results.calculation?.netAnnualROI ?? 0,
+            monthlyROI: results.calculation?.monthlyROI ?? 0,
+            paybackPeriodMonths: results.calculation?.paybackPeriodMonths ?? 0,
+            fiveYearROI: results.calculation?.fiveYearROI ?? 0,
+            roiPercentage: results.calculation?.roiPercentage ?? 0,
+            firstYearNetSavings: results.calculation?.firstYearNetSavings ?? 0,
+            totalFiveYearInvestment: results.calculation?.totalFiveYearInvestment ?? 0,
+            efficiencyGainPercent: results.calculation?.efficiencyGainPercent ?? 0,
+            hasPositiveROI: results.calculation?.hasPositiveROI ?? false,
+            isAtMinimumStaff: results.calculation?.isAtMinimumStaff ?? false,
+            isUnderstaffed: results.calculation?.isUnderstaffed ?? false,
+          },
+          timestamp: timestampStr,
+        },
+        contactInfo: {
+          firstName: contactInfo.firstName || '',
+          lastName: contactInfo.lastName || '',
+          email: contactInfo.email || '',
+        },
+        uploadToHubSpot,
+      };
+
       // Use server-side PDF generation API
       const response = await fetch('/api/generate-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          results: {
-            branchData: results.branchData,
-            calculation: results.calculation,
-            timestamp: results.timestamp.toISOString(),
-          },
-          contactInfo: {
-            firstName: contactInfo.firstName || '',
-            lastName: contactInfo.lastName || '',
-            email: contactInfo.email || '',
-          },
-          uploadToHubSpot,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -100,7 +136,8 @@ export default function ResultsPage() {
       } else {
         // Direct PDF download
         const blob = await response.blob();
-        const filename = `TCR-ROI-Report-${results.branchData.institutionName.replace(/\s+/g, '-')}.pdf`;
+        const institutionName = results.branchData?.institutionName || 'Report';
+        const filename = `TCR-ROI-Report-${institutionName.replace(/\s+/g, '-')}.pdf`;
 
         // Create download link
         const url = window.URL.createObjectURL(blob);
