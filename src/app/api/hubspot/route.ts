@@ -56,90 +56,67 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare the HubSpot Forms API payload
-    // Using the v3 Forms API
+    // The Forms API uses simple { name, value } format (NOT objectTypeId format)
+    // Build ROI summary message for notes field
+    const roiSummary = `TCR ROI Calculator Results:
+- Institution: ${data.institutionName}
+- Branch: ${data.branchName}
+- Monthly Transactions: ${data.monthlyTransactions.toLocaleString()}
+- Current FTEs: ${data.currentFTEs}
+- Annual FTE Cost: $${data.annualFTECost.toLocaleString()}
+- Estimated Annual ROI: $${data.estimatedROI.toLocaleString()}
+- 5-Year ROI: $${data.fiveYearROI.toLocaleString()}
+- FTE Savings: ${data.fteSavings}
+- Payback Period: ${data.paybackPeriodMonths} months
+- Has Positive ROI: ${data.hasPositiveROI ? 'Yes' : 'No'}
+- Pain Points: ${data.painPoints.length > 0 ? data.painPoints.join(', ') : 'None selected'}`;
+
     const hubspotPayload = {
       fields: [
-        // Standard HubSpot contact properties
-        { objectTypeId: '0-1', name: 'firstname', value: data.firstName },
-        { objectTypeId: '0-1', name: 'lastname', value: data.lastName },
-        { objectTypeId: '0-1', name: 'email', value: data.email },
-        { objectTypeId: '0-1', name: 'phone', value: data.phone || '' },
-        { objectTypeId: '0-1', name: 'company', value: data.branchName }, // Branch Name → Company
-        { objectTypeId: '0-1', name: 'jobtitle', value: data.jobTitle || '' },
+        // Standard HubSpot contact properties (these always work)
+        { name: 'firstname', value: data.firstName },
+        { name: 'lastname', value: data.lastName },
+        { name: 'email', value: data.email },
+        { name: 'phone', value: data.phone || '' },
+        { name: 'company', value: data.branchName }, // Branch Name → Company
+        { name: 'jobtitle', value: data.jobTitle || '' },
 
-        // Custom properties - Institution & Branch Information
-        { objectTypeId: '0-1', name: 'institution_name', value: data.institutionName }, // Institution Name (custom)
-        {
-          objectTypeId: '0-1',
-          name: 'monthly_transactions',
-          value: data.monthlyTransactions.toString(),
-        },
-        {
-          objectTypeId: '0-1',
-          name: 'current_ftes',
-          value: data.currentFTEs.toString(),
-        },
-        {
-          objectTypeId: '0-1',
-          name: 'annual_fte_cost',
-          value: data.annualFTECost.toString(),
-        },
+        // Store all ROI data in message/notes field (always works, no custom properties needed)
+        { name: 'message', value: roiSummary },
 
-        // Custom properties - ROI Results
-        {
-          objectTypeId: '0-1',
-          name: 'estimated_roi',
-          value: data.estimatedROI.toString(),
-        },
-        {
-          objectTypeId: '0-1',
-          name: 'five_year_roi',
-          value: data.fiveYearROI.toString(),
-        },
-        {
-          objectTypeId: '0-1',
-          name: 'fte_savings',
-          value: data.fteSavings.toString(),
-        },
-        {
-          objectTypeId: '0-1',
-          name: 'payback_period_months',
-          value: data.paybackPeriodMonths.toString(),
-        },
-        {
-          objectTypeId: '0-1',
-          name: 'has_positive_roi',
-          value: data.hasPositiveROI ? 'true' : 'false',
-        },
+        // Custom properties - these only work if added to HubSpot form
+        // Institution & Branch Information
+        { name: 'institution_name', value: data.institutionName },
+        { name: 'monthly_transactions', value: data.monthlyTransactions.toString() },
+        { name: 'current_ftes', value: data.currentFTEs.toString() },
+        { name: 'annual_fte_cost', value: data.annualFTECost.toString() },
 
-        // Custom properties - Pain Points
-        {
-          objectTypeId: '0-1',
-          name: 'pain_points',
-          value: data.painPoints.join('; '),
-        },
-        {
-          objectTypeId: '0-1',
-          name: 'pain_point_count',
-          value: data.painPoints.length.toString(),
-        },
+        // ROI Results
+        { name: 'estimated_roi', value: data.estimatedROI.toString() },
+        { name: 'five_year_roi', value: data.fiveYearROI.toString() },
+        { name: 'fte_savings', value: data.fteSavings.toString() },
+        { name: 'payback_period_months', value: data.paybackPeriodMonths.toString() },
+        { name: 'has_positive_roi', value: data.hasPositiveROI ? 'true' : 'false' },
+
+        // Pain Points
+        { name: 'pain_points', value: data.painPoints.join('; ') },
+        { name: 'pain_point_count', value: data.painPoints.length.toString() },
       ],
       context: {
         pageUri: request.headers.get('referer') || 'https://roi.qdsdata.com',
         pageName: 'TCR ROI Calculator',
       },
-      legalConsentOptions: {
-        consent: {
-          consentToProcess: true,
-          text: 'I agree to receive communications from QDS.',
-        },
-      },
+      // Note: legalConsentOptions removed - it can cause submission failures
+      // if the HubSpot form doesn't have GDPR/consent settings enabled
     };
 
     // Submit to HubSpot Forms API
     const hubspotUrl = `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formGuid}`;
 
-    const hubspotResponse = await fetch(hubspotUrl, {
+    console.log('Submitting to HubSpot:', hubspotUrl);
+    console.log('Payload fields:', hubspotPayload.fields.map(f => f.name));
+
+    let hubspotResponse = await fetch(hubspotUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -147,19 +124,50 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(hubspotPayload),
     });
 
+    // If initial submission fails, retry with only standard fields
     if (!hubspotResponse.ok) {
       const errorText = await hubspotResponse.text();
-      console.error('HubSpot API error:', errorText);
+      console.error('HubSpot API error (full payload):', errorText);
 
-      // Don't fail the request - still return success
-      // Log for debugging but don't block user experience
-      return NextResponse.json({
-        success: true,
-        message: 'Form processed (HubSpot sync pending)',
+      // Fallback: Try with only standard HubSpot fields
+      const fallbackPayload = {
+        fields: [
+          { name: 'firstname', value: data.firstName },
+          { name: 'lastname', value: data.lastName },
+          { name: 'email', value: data.email },
+          { name: 'phone', value: data.phone || '' },
+          { name: 'company', value: data.branchName },
+          { name: 'jobtitle', value: data.jobTitle || '' },
+          { name: 'message', value: roiSummary },
+        ],
+        context: hubspotPayload.context,
+      };
+
+      console.log('Retrying HubSpot with fallback (standard fields only)');
+
+      hubspotResponse = await fetch(hubspotUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(fallbackPayload),
       });
+
+      if (!hubspotResponse.ok) {
+        const fallbackError = await hubspotResponse.text();
+        console.error('HubSpot API error (fallback):', fallbackError);
+
+        // Still return success to user, but log for debugging
+        return NextResponse.json({
+          success: true,
+          message: 'Form processed (HubSpot sync pending)',
+          debug: process.env.NODE_ENV === 'development' ? fallbackError : undefined,
+        });
+      }
     }
 
     const hubspotResult = await hubspotResponse.json();
+    console.log('HubSpot submission successful:', hubspotResult);
 
     return NextResponse.json({
       success: true,
@@ -174,6 +182,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Form received',
+      debug: process.env.NODE_ENV === 'development' ? String(error) : undefined,
     });
   }
 }
