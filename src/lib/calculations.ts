@@ -99,7 +99,7 @@ export function calculateROI(branchData: BranchData): ROICalculation {
   // Step 2: Calculate FTE savings with conservative rounding
   const fteSavings = calculateFTESavings(currentFTEs, recommendedFTEs);
 
-  // Step 3: Calculate annual labor savings
+  // Step 3: Calculate annual labor savings (gross, before TCR costs)
   const annualLaborSavings = calculateAnnualLaborSavings(
     fteSavings,
     effectiveFTECost
@@ -117,6 +117,27 @@ export function calculateROI(branchData: BranchData): ROICalculation {
   // Step 7: Calculate 5-year ROI
   const fiveYearROI = calculateFiveYearROI(netAnnualROI);
 
+  // Step 8: Calculate enhanced metrics
+  // ROI percentage (annual net savings / total annual investment)
+  const totalAnnualInvestment = ANNUAL_TCR_COST;
+  const roiPercentage = totalAnnualInvestment > 0
+    ? (netAnnualROI / totalAnnualInvestment) * 100
+    : 0;
+
+  // First year net savings (includes one-time capital cost)
+  const firstYearNetSavings = netAnnualROI - TCR_CAPITAL_COST;
+
+  // Total 5-year investment (capital + 5 years of operating)
+  const totalFiveYearInvestment = TCR_CAPITAL_COST + (ANNUAL_TCR_COST * 5);
+
+  // Efficiency gain: transactions per staff improvement
+  // Current: monthlyTransactions / currentFTEs
+  // With TCR: monthlyTransactions / recommendedFTEs (which equals TRANSACTIONS_PER_FTE_MONTHLY)
+  const currentTransPerFTE = currentFTEs > 0 ? monthlyTransactions / currentFTEs : 0;
+  const efficiencyGainPercent = currentTransPerFTE > 0
+    ? ((TRANSACTIONS_PER_FTE_MONTHLY - currentTransPerFTE) / currentTransPerFTE) * 100
+    : 0;
+
   // Determine edge case flags
   const hasPositiveROI = netAnnualROI > 0;
   const isAtMinimumStaff = currentFTEs <= MINIMUM_FTES;
@@ -131,6 +152,10 @@ export function calculateROI(branchData: BranchData): ROICalculation {
     monthlyROI,
     paybackPeriodMonths,
     fiveYearROI,
+    roiPercentage,
+    firstYearNetSavings,
+    totalFiveYearInvestment,
+    efficiencyGainPercent,
     hasPositiveROI,
     isAtMinimumStaff,
     isUnderstaffed,

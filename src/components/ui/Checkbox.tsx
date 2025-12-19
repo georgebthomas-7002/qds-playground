@@ -19,7 +19,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         className={cn(
           'flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-4 transition-all duration-200',
           'hover:border-brand-navy/30 hover:bg-gray-50',
-          checked && 'border-brand-teal bg-brand-teal/5 hover:bg-brand-teal/10',
+          checked && 'border-brand-lime bg-brand-lime/10 hover:bg-brand-lime/15',
           className
         )}
       >
@@ -37,7 +37,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             className={cn(
               'h-5 w-5 rounded border-2 transition-all duration-200',
               checked
-                ? 'border-brand-teal bg-brand-teal'
+                ? 'border-brand-lime bg-brand-lime'
                 : 'border-gray-300 bg-white'
             )}
           >
@@ -45,7 +45,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               initial={false}
               animate={checked ? { scale: 1, opacity: 1 } : { scale: 0.5, opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="h-full w-full text-white"
+              className="h-full w-full text-brand-navy"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"

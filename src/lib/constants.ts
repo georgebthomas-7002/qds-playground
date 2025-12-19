@@ -81,6 +81,73 @@ export const PAIN_POINTS: PainPoint[] = [
 ];
 
 // ============================================
+// PAIN POINT SOLUTIONS - How TCR addresses each
+// ============================================
+
+export const PAIN_POINT_SOLUTIONS: Record<string, {
+  solution: string;
+  benefit: string;
+  stat?: string;
+}> = {
+  cash_handling_errors: {
+    solution: 'Automated counting with counterfeit detection',
+    benefit: 'Eliminates human counting errors and catches counterfeit bills instantly',
+    stat: 'Up to 99.9% accuracy',
+  },
+  long_wait_times: {
+    solution: 'Faster transaction processing',
+    benefit: 'Cash transactions complete in seconds, not minutes',
+    stat: 'Up to 40% faster service',
+  },
+  manual_counting: {
+    solution: 'Instant automated counting and validation',
+    benefit: 'Staff focus on customers, not counting cash',
+    stat: 'Saves 15+ minutes per shift',
+  },
+  vault_management: {
+    solution: 'Integrated cash management system',
+    benefit: 'Real-time visibility into cash positions across all units',
+    stat: 'Reduce vault trips by 70%',
+  },
+  staffing_constraints: {
+    solution: 'Higher transaction capacity per teller',
+    benefit: 'Handle more volume with optimized staffing levels',
+    stat: 'Up to 2,250 transactions/FTE/month',
+  },
+  audit_compliance: {
+    solution: 'Complete transaction audit trail',
+    benefit: 'Automatic documentation for every cash movement',
+    stat: '100% transaction traceability',
+  },
+  cash_ordering: {
+    solution: 'Predictive cash forecasting',
+    benefit: 'Optimize cash on hand, reduce armored car visits',
+    stat: 'Lower cash carrying costs',
+  },
+  employee_training: {
+    solution: 'Intuitive touchscreen interface',
+    benefit: 'New staff productive in hours, not weeks',
+    stat: 'Reduce training time by 50%',
+  },
+};
+
+// ============================================
+// INDUSTRY BENCHMARKS & INSIGHTS
+// ============================================
+
+export const INDUSTRY_INSIGHTS = {
+  averageTellerSalary: 42000,
+  averageTransactionsPerTeller: 1800, // Without TCR
+  tcrTransactionsPerTeller: 2250, // With TCR
+  averageErrorRate: 0.5, // 0.5% error rate without TCR
+  tcrErrorRate: 0.01, // 0.01% with TCR
+  averageTransactionTime: 180, // seconds without TCR
+  tcrTransactionTime: 90, // seconds with TCR
+  branchesUsingTCR: 65, // percentage
+  customerSatisfactionIncrease: 23, // percentage points
+};
+
+// ============================================
 // FORM VALIDATION
 // ============================================
 

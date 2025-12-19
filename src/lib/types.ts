@@ -23,7 +23,7 @@ export interface ROICalculation {
   fteSavings: number;
 
   // Financial Metrics
-  annualLaborSavings: number;
+  annualLaborSavings: number; // Gross savings before TCR costs
   annualTCRCost: number;
   netAnnualROI: number;
 
@@ -31,6 +31,12 @@ export interface ROICalculation {
   monthlyROI: number;
   paybackPeriodMonths: number;
   fiveYearROI: number;
+
+  // Enhanced Metrics
+  roiPercentage: number; // Annual ROI as percentage of TCR investment
+  firstYearNetSavings: number; // First year net (includes capital cost)
+  totalFiveYearInvestment: number; // Total TCR costs over 5 years
+  efficiencyGainPercent: number; // % improvement in transactions per staff
 
   // Flags
   hasPositiveROI: boolean;
