@@ -53,7 +53,7 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="mx-auto max-w-3xl text-center"
           >
-            <span className="mb-4 inline-block rounded-full bg-brand-teal/10 px-4 py-1.5 text-sm font-semibold text-brand-teal">
+            <span className="mb-4 inline-block rounded-full bg-brand-sky/20 px-4 py-1.5 text-sm font-semibold text-brand-navy">
               Free ROI Analysis
             </span>
 

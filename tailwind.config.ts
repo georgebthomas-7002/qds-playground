@@ -10,15 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          navy: '#1e3a5f',
-          'navy-light': '#2a4a73',
-          'navy-dark': '#152c4a',
+          // QDS Official Color Palette
+          navy: '#20376c',
+          'navy-light': '#2a4a7d',
+          'navy-dark': '#1a2d58',
           teal: '#0d9488',
           'teal-light': '#14b8a6',
           'teal-dark': '#0f766e',
           blue: '#3b82f6',
           'blue-light': '#60a5fa',
-          'sky': '#a5d7f1',
+          sky: '#a5d7f1',
+          lime: '#c0d844',
         },
       },
       fontFamily: {

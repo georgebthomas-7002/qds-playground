@@ -11,28 +11,29 @@
     "test:calculations": "vitest run src/lib/__tests__/calculations.test.ts"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.11.9",
     "next": "^14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "zustand": "^4.5.5",
-    "framer-motion": "^11.11.9",
     "recharts": "^2.12.7",
     "resend": "^4.0.0",
+    "tailwind-merge": "^2.5.3",
     "zod": "^3.23.8",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^2.5.3"
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.0.1",
     "@types/node": "^22.7.5",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
-    "typescript": "^5.6.3",
-    "tailwindcss": "^3.4.13",
-    "postcss": "^8.4.47",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.15",
-    "vitest": "^2.1.2",
-    "@testing-library/react": "^16.0.1"
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
   }
 }
