@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui';
+import { Button, Footer } from '@/components/ui';
 import { trackEvent } from '@/lib/utils';
 import { QDS_LOGO_URL, QDS_CONTACT_URL } from '@/lib/constants';
 
@@ -161,29 +161,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 bg-white py-8">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="flex items-center gap-2">
-              <Image
-                src={QDS_LOGO_URL}
-                alt="QDS Logo"
-                width={32}
-                height={32}
-                className="rounded"
-                unoptimized
-              />
-              <span className="text-sm font-semibold text-gray-700">
-                Quality Data Systems
-              </span>
-            </div>
-            <p className="text-sm text-gray-500">
-              Serving financial institutions for 40+ years
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

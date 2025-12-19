@@ -4,3 +4,4 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Checkbox } from './Checkbox';
 export { ProgressBar } from './ProgressBar';
 export { StepIndicator } from './StepIndicator';
+export { Footer } from './Footer';

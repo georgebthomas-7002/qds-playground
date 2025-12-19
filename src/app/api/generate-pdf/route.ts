@@ -348,8 +348,37 @@ interface PDFRequestBody {
 
 // PDF Document Component
 function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['results']; contactInfo: PDFRequestBody['contactInfo'] }) {
-  const { branchData, calculation, timestamp } = results;
-  const date = new Date(timestamp).toLocaleDateString('en-US', {
+  // Ensure branchData has defaults
+  const branchData = {
+    institutionName: results?.branchData?.institutionName || 'Unknown Institution',
+    branchName: results?.branchData?.branchName || 'Unknown Branch',
+    monthlyTransactions: results?.branchData?.monthlyTransactions ?? 0,
+    currentFTEs: results?.branchData?.currentFTEs ?? 0,
+    annualFTECost: results?.branchData?.annualFTECost ?? 42000,
+    painPoints: results?.branchData?.painPoints || [],
+  };
+
+  // Ensure calculation has defaults
+  const calculation = {
+    recommendedFTEs: results?.calculation?.recommendedFTEs ?? 0,
+    fteSavings: results?.calculation?.fteSavings ?? 0,
+    annualLaborSavings: results?.calculation?.annualLaborSavings ?? 0,
+    annualTCRCost: results?.calculation?.annualTCRCost ?? ANNUAL_TCR_COST,
+    netAnnualROI: results?.calculation?.netAnnualROI ?? 0,
+    monthlyROI: results?.calculation?.monthlyROI ?? 0,
+    paybackPeriodMonths: results?.calculation?.paybackPeriodMonths ?? 0,
+    fiveYearROI: results?.calculation?.fiveYearROI ?? 0,
+    roiPercentage: results?.calculation?.roiPercentage ?? 0,
+    firstYearNetSavings: results?.calculation?.firstYearNetSavings ?? 0,
+    totalFiveYearInvestment: results?.calculation?.totalFiveYearInvestment ?? 0,
+    efficiencyGainPercent: results?.calculation?.efficiencyGainPercent ?? 0,
+    hasPositiveROI: results?.calculation?.hasPositiveROI ?? false,
+    isAtMinimumStaff: results?.calculation?.isAtMinimumStaff ?? false,
+    isUnderstaffed: results?.calculation?.isUnderstaffed ?? false,
+  };
+
+  const timestamp = results?.timestamp;
+  const date = new Date(timestamp || new Date()).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -380,16 +409,16 @@ function ROIReportPDF({ results, contactInfo }: { results: PDFRequestBody['resul
       React.createElement(Text, { style: styles.subtitle },
         `${branchData.institutionName} - ${branchData.branchName}`
       ),
-      contactInfo.firstName && React.createElement(Text, {
+      contactInfo?.firstName && React.createElement(Text, {
         style: { fontSize: 9, color: colors.gray, textAlign: 'center', marginBottom: 15 }
-      }, `Prepared for: ${contactInfo.firstName} ${contactInfo.lastName}`),
+      }, `Prepared for: ${contactInfo.firstName} ${contactInfo.lastName || ''}`),
 
       // Executive Summary
       React.createElement(View, { style: styles.execSummary },
         React.createElement(Text, { style: styles.execTitle }, 'Estimated Annual Savings'),
         React.createElement(Text, { style: styles.execValue }, formatCurrency(calculation.netAnnualROI)),
         React.createElement(Text, { style: styles.execSubtext },
-          `Based on ${formatFTE(calculation.fteSavings)} FTE optimization | ${Math.round(calculation.roiPercentage)}% annual ROI`
+          `Based on ${formatFTE(calculation.fteSavings)} FTE optimization | ${Math.round(calculation.roiPercentage || 0)}% annual ROI`
         )
       ),
 
