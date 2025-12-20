@@ -16,11 +16,12 @@ import { hubspotSubmissionSchema } from '@/lib/validations';
  * - monthly_transactions (Number)
  * - current_ftes (Number)
  * - annual_fte_cost (Number)
- * - estimated_roi (Number)
- * - five_year_roi (Number)
+ * - estimated_annual_roi (Number)
+ * - n5year_roi (Number)
  * - fte_savings (Number)
  * - payback_period_months (Number)
  * - pain_points (Multiple checkboxes or Multi-line text)
+ * - number_of_pain_points (Number)
  */
 
 // Helper: Find a company by domain using HubSpot CRM API
@@ -98,12 +99,12 @@ async function createCompany(companyData: CompanyData, accessToken: string): Pro
       monthly_transactions: companyData.monthlyTransactions.toString(),
       current_ftes: companyData.currentFTEs.toString(),
       annual_fte_cost: companyData.annualFTECost.toString(),
-      estimated_roi: companyData.estimatedROI.toString(),
-      five_year_roi: companyData.fiveYearROI.toString(),
+      estimated_annual_roi: companyData.estimatedROI.toString(),
+      n5year_roi: companyData.fiveYearROI.toString(),
       fte_savings: companyData.fteSavings.toString(),
       payback_period_months: companyData.paybackPeriodMonths.toString(),
       pain_points: companyData.painPoints.join('; '),
-      pain_point_count: companyData.painPoints.length.toString(),
+      number_of_pain_points: companyData.painPoints.length.toString(),
     },
   };
   console.log('[createCompany] Request body:', JSON.stringify(requestBody));
@@ -147,12 +148,12 @@ async function updateCompany(companyId: string, companyData: CompanyData, access
       monthly_transactions: companyData.monthlyTransactions.toString(),
       current_ftes: companyData.currentFTEs.toString(),
       annual_fte_cost: companyData.annualFTECost.toString(),
-      estimated_roi: companyData.estimatedROI.toString(),
-      five_year_roi: companyData.fiveYearROI.toString(),
+      estimated_annual_roi: companyData.estimatedROI.toString(),
+      n5year_roi: companyData.fiveYearROI.toString(),
       fte_savings: companyData.fteSavings.toString(),
       payback_period_months: companyData.paybackPeriodMonths.toString(),
       pain_points: companyData.painPoints.join('; '),
-      pain_point_count: companyData.painPoints.length.toString(),
+      number_of_pain_points: companyData.painPoints.length.toString(),
     },
   };
   console.log('[updateCompany] Request body:', JSON.stringify(requestBody));
@@ -597,12 +598,12 @@ export async function POST(request: NextRequest) {
  *
  * ROI RESULTS PROPERTIES:
  *
- * 5. estimated_roi
+ * 5. estimated_annual_roi
  *    - Label: Estimated Annual ROI
  *    - Type: Number
  *    - Group: TCR Calculator
  *
- * 6. five_year_roi
+ * 6. n5year_roi
  *    - Label: 5-Year ROI
  *    - Type: Number
  *    - Group: TCR Calculator
@@ -638,7 +639,7 @@ export async function POST(request: NextRequest) {
  *       - cash_ordering
  *       - employee_training
  *
- * 11. pain_point_count
+ * 11. number_of_pain_points
  *     - Label: Number of Pain Points
  *     - Type: Number
  *     - Group: TCR Calculator
